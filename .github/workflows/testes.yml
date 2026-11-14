@@ -1,0 +1,34 @@
+name: Build e testes
+
+# A cada envio: monta o index.html a partir do código com as versões fixadas,
+# confere que é idêntico ao publicado (SHA256SUMS) e roda o teste de segurança.
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  testes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Instalar bibliotecas (versões fixadas)
+        run: npm ci
+      - name: Montar a página e conferir o hash
+        run: |
+          npm run build
+          sha256sum -c SHA256SUMS
+      - name: Instalar o navegador de teste
+        run: |
+          pip install playwright pypdf
+          python3 -m playwright install --with-deps chromium
+      - name: Teste de segurança
+        run: npm test
