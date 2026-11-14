@@ -2120,30 +2120,36 @@ if (typeof module !== 'undefined') module.exports = createPdf2Docx;
     $('redCount').textContent = n ? parts.join(', ') : 'Marque as áreas arrastando sobre a página'; $('go_red').disabled = !n; $('prevbtn_red').disabled = !n; }
 
   /* ---- gerador de dados fictícios ---- */
-  function fakeLine(s, st) {
-    s = s.trim(); if (!s) return '';
-    if (/^[\w.+-]+@[\w-]+(\.[\w-]+)+$/.test(s)) return 'nome@exemplo.com';
-    var letters = (s.match(/[A-Za-zÀ-ÿ]/g) || []).length, digits = (s.match(/\d/g) || []).length;
+  var NAMES = ['Ana', 'Rui', 'Lima', 'Nome', 'Rosa', 'Silva', 'Souza', 'Costa', 'Campos', 'Pereira', 'Exemplo', 'Oliveira', 'Fernandes', 'Albuquerque'];
+  function nameLike(len, st) { var best = null, bd = 99; for (var q = 0; q < NAMES.length; q++) { var n = NAMES[(q + st.m) % NAMES.length], d = Math.abs(n.length - len) + (st.used[n] ? 3 : 0); if (d < bd) { bd = d; best = n; } } st.used[best] = 1; return best; }
+  function fakeTokens(words, st) { // uma palavra fictícia para cada palavra original
+    var out = words.slice(), k = 0;
     var seq = function (t) { return t.replace(/\d{2}\/\d{2}\/(\d{4}|\d{2})/g, function (m, y) { return '01/01/' + (y.length === 4 ? '2025' : '25'); })
-      .replace(/\d/g, function (d, i, all) { var c = '1234567890'.charAt(st.n % 10); st.n++; return c; }); };
-    if (digits && digits >= letters) return seq(s);
-    if (!letters) return s;
-    var words = s.split(/\s+/), caps = s === s.toUpperCase(), title = words.every(function (w) { return /^[A-ZÀ-Ý]/.test(w) || /^(de|da|do|dos|das|e)$/i.test(w); });
-    var out;
-    if (/\b(LTDA|S\.?A\.?|ME|EIRELI|EPP)\b/i.test(s)) out = 'Empresa Exemplo Ltda';
-    else if (title || caps) out = words.length <= 1 ? 'Nome' : words.length === 2 ? 'Nome Sobrenome' : 'Nome de Exemplo';
-    else out = words.length <= 2 ? 'texto exemplo' : 'texto de exemplo';
-    if (digits) out = seq(s.replace(/[A-Za-zÀ-ÿ]+(\s+[A-Za-zÀ-ÿ]+)*/, out));
-    return caps ? out.toUpperCase() : out;
+      .replace(/\d/g, function () { var c = '1234567890'.charAt(st.n % 10); st.n++; return c; }); };
+    var isLabel = function (w) { return /:$/.test(w) || /^(n[ºo°]|nr\.?|de|da|do|dos|das|e|a|o|em|para|por|com)$/i.test(w); };
+    var keep = function (w) { return /^(LTDA|S\.?A\.?|ME|EIRELI|EPP|-|–|\/|\||&)$/i.test(w) || !/[A-Za-zÀ-ÿ0-9]/.test(w); };
+    while (k < words.length) { var w = words[k];
+      if (isLabel(w) || keep(w)) { k++; continue; }
+      if (/^[\w.+-]+@[\w-]+(\.[\w-]+)+$/.test(w)) { out[k] = 'nome@exemplo.com'; k++; continue; }
+      var L = (w.match(/[A-Za-zÀ-ÿ]/g) || []).length, D = (w.match(/\d/g) || []).length;
+      if (D && D >= L) { out[k] = seq(w); k++; continue; }
+      // sequência de palavras de letras (nome, empresa, cidade…)
+      var e = k; while (e < words.length && !isLabel(words[e]) && !keep(words[e]) && /[A-Za-zÀ-ÿ]/.test(words[e]) && !((words[e].match(/\d/g) || []).length >= (words[e].match(/[A-Za-zÀ-ÿ]/g) || []).length)) e++;
+      if (e < words.length && /:$/.test(words[e])) { k = e + 1; continue; } // palavras que fazem parte de um rótulo ("Local Ovação:")
+      var run = words.slice(k, e), caps = run.join(' ') === run.join(' ').toUpperCase(), lower = run.join(' ') === run.join(' ').toLowerCase();
+      run.forEach(function (rw, q) { var core = rw.replace(/[^A-Za-zÀ-ÿ]/g, ''), nm = q === 0 && /\b(LTDA|S\.?A\.?)\b/i.test(words.slice(e, e + 2).join(' ')) ? 'Empresa' : nameLike(core.length, st);
+        var tail = (rw.match(/[^A-Za-zÀ-ÿ0-9]+$/) || [''])[0]; nm += tail; out[k + q] = caps ? nm.toUpperCase() : lower ? nm.toLowerCase() : nm; });
+      st.m += run.length; k = e; }
+    return out;
   }
-  function suggest(lines) { var st = { n: 0 }; return lines.map(function (l) { return fakeLine(l.text, st); }).join('\n'); }
+  function suggest(lines) { var st = { n: 0, m: 0, used: {} }; return lines.map(function (l) { return fakeTokens(l.words.map(function (w) { return w.str; }), st).join(' '); }).join('\n'); }
 
   /* ---- leitura do texto dentro da área ---- */
   function famOf(n) { n = (n || '').toLowerCase(); return /times|roman|serif|georgia|garamond|cambria/.test(n) && !/sans/.test(n) ? 'Times New Roman' : /courier|mono|consol/.test(n) ? 'Courier New' : /calibri|carlito/.test(n) ? 'Calibri' : /verdana/.test(n) ? 'Verdana' : 'Arial'; }
   function groupLines(ws) { ws.sort(function (a, b) { return a.base - b.base || a.x - b.x; }); var ls = [];
     ws.forEach(function (w) { var l = ls[ls.length - 1]; if (l && Math.abs(l.base - w.base) < 0.35 * Math.max(l.size, w.size)) { l.ws.push(w); } else ls.push({ base: w.base, size: w.size, ws: [w] }); });
-    return ls.map(function (l) { l.ws.sort(function (a, b) { return a.x - b.x; }); var f = l.ws[0];
-      return { text: l.ws.map(function (w) { return w.str; }).join(' ').replace(/\s+/g, ' ').trim(), x: f.x, base: l.base, size: l.size, family: f.family, bold: f.bold, italic: f.italic }; }); }
+    return ls.map(function (l) { l.ws.sort(function (a, b) { return a.x - b.x; }); var f = l.ws[0], sz = l.ws.map(function (w) { return w.size; }).sort(function (a, b) { return a - b; })[l.ws.length >> 1];
+      return { text: l.ws.map(function (w) { return w.str; }).join(' ').replace(/\s+/g, ' ').trim(), x: f.x, base: l.base, size: sz, family: f.family, bold: f.bold, italic: f.italic, ws: l.ws }; }); }
   var rec_ext = null;
   async function detect(it, r) {
     var W = it.W, Hh = it.H, x0 = r.r[0] * W, y0 = r.r[1] * Hh, x1 = r.r[2] * W, y1 = r.r[3] * Hh, ws = [];
@@ -2155,12 +2161,14 @@ if (typeof module !== 'undefined') module.exports = createPdf2Docx;
       var cw = Math.min(cv.width - cx0, Math.ceil((x1 - x0) * sc + 2 * pad)), ch = Math.min(cv.height - cy0, Math.ceil((y1 - y0) * sc + 2 * pad));
       if (cw > 4 && ch > 4) { var crop = document.createElement('canvas'); crop.width = cw; crop.height = ch; crop.getContext('2d').drawImage(cv, cx0, cy0, cw, ch, 0, 0, cw, ch);
         var words = await C.OCR.canvasWords(crop, 1); crop.width = crop.height = 0;
-        words.forEach(function (w) { var h = w.y1 - w.y0; ws.push({ str: w.str, x: (cx0 + w.x0) / sc, base: (cy0 + w.base) / sc, w: (w.x1 - w.x0) / sc, size: Math.max(4, h / 0.72 / sc), family: 'Arial', bold: false, italic: false }); }); }
+        words.forEach(function (w) { var h = w.y1 - w.y0, s = w.str, up = /[A-ZÀ-ÝbdfhklĺtíÍ0-9()\[\]\/|!?%&#@$]/.test(s), dn = /[gjpqyçÇ,;()\[\]\/|]/.test(s), kk = up && dn ? 0.93 : up ? 0.71 : dn ? 0.70 : 0.48;
+          ws.push({ str: s, x: (cx0 + w.x0) / sc, base: (cy0 + w.base) / sc, w: (w.x1 - w.x0) / sc, size: Math.max(4, h / kk / sc), family: 'Arial', bold: false, italic: false }); }); }
     }
     var ext = ws.length ? [Math.min.apply(null, ws.map(function (w) { return w.x; })) / W, Math.min.apply(null, ws.map(function (w) { return w.base - w.size * 0.95; })) / Hh,
       Math.max.apply(null, ws.map(function (w) { return w.x + w.w; })) / W, Math.max.apply(null, ws.map(function (w) { return w.base + w.size * 0.28; })) / Hh] : null;
     rec_ext = ext;
-    return groupLines(ws).map(function (l) { return { text: l.text, x: l.x / W, base: l.base / Hh, size: l.size / Hh, family: l.family, bold: l.bold, italic: l.italic, ext: ext }; });
+    return groupLines(ws).map(function (l) { return { text: l.text, x: l.x / W, base: l.base / Hh, size: l.size / Hh, family: l.family, bold: l.bold, italic: l.italic, ext: ext,
+      words: l.ws.map(function (w) { return { str: w.str, x: w.x / W, w: w.w / W, base: w.base / Hh, size: w.size / Hh, bold: w.bold, italic: w.italic, family: w.family }; }) }; });
   }
 
   /* ---- editor ---- */
@@ -2235,16 +2243,23 @@ if (typeof module !== 'undefined') module.exports = createPdf2Docx;
     for (var i = 0; i < d.length; i += 16) { var s = d[i] + d[i + 1] + d[i + 2]; if (s < best) { best = s; c = [d[i], d[i + 1], d[i + 2]]; } } return best < 600 ? 'rgb(' + c.join(',') + ')' : '#000'; }
   function effect(c, rects) {
     var x = c.getContext('2d'), W = c.width, Hh = c.height, px = function (rec) { var r = rec.r; return [r[0] * W, r[1] * Hh, (r[2] - r[0]) * W, (r[3] - r[1]) * Hh]; };
-    rects.filter(function (r) { return r.m === 's'; }).forEach(function (rec) { var r = px(rec), ink = inkColor(x, r), bg = bgColor(x, r);
-      var e = rec.lines && rec.lines.length && rec.lines[0].ext, f0 = r.slice();
-      if (e) { var pd = 0.004 * W, ex0 = e[0] * W - pd, ey0 = e[1] * Hh - pd / 2, ex1 = e[2] * W + pd, ey1 = e[3] * Hh + pd / 2; f0 = [ex0, ey0, ex1 - ex0, ey1 - ey0]; } // cobre só as palavras lidas
-      x.fillStyle = bg; x.fillRect(Math.floor(f0[0]) - 1, Math.floor(f0[1]) - 1, Math.ceil(f0[2]) + 2, Math.ceil(f0[3]) + 2); r = f0;
-      var lines = String(rec.text || '').split('\n'), src = rec.lines && rec.lines.length ? rec.lines : null;
-      lines.forEach(function (t, i) { if (!t) return; var L = src ? src[Math.min(i, src.length - 1)] : null;
-        var size = L ? L.size * Hh : Math.min(r[3] * 0.8, 40 * W / 1000), base = L ? (L.base * Hh + (i >= src.length ? (i - src.length + 1) * size * 1.15 : 0)) : r[1] + r[3] * 0.75, x0 = L ? L.x * W : r[0] + 2;
-        x.font = (L && L.italic ? 'italic ' : '') + (L && L.bold ? 'bold ' : '') + size.toFixed(2) + 'px "' + (L ? L.family : 'Arial') + '", ' + (L && L.family === 'Times New Roman' ? 'serif' : 'sans-serif');
-        x.fillStyle = ink; x.textBaseline = 'alphabetic'; var tw = x.measureText(t).width, room = r[0] + r[2] - x0 + 2;
-        x.save(); x.translate(x0, base); if (tw > room && room > 4) x.scale(room / tw, 1); x.fillText(t, 0, 0); x.restore(); }); });
+    var fontOf = function (o, size) { return (o && o.italic ? 'italic ' : '') + (o && o.bold ? 'bold ' : '') + size.toFixed(2) + 'px "' + ((o && o.family) || 'Arial') + '", ' + (o && o.family === 'Times New Roman' ? 'serif' : 'sans-serif'); };
+    var fitText = function (t, x0, base, room) { var tw = x.measureText(t).width; x.save(); x.translate(x0, base); if (tw > room && room > 4) x.scale(room / tw, 1); x.fillText(t, 0, 0); x.restore(); };
+    rects.filter(function (r) { return r.m === 's'; }).forEach(function (rec) { var r = px(rec), src = rec.lines && rec.lines.length ? rec.lines : null, lines = String(rec.text || '').split('\n');
+      if (!src) { var bg0 = bgColor(x, r), ink0 = inkColor(x, r); x.fillStyle = bg0; x.fillRect(r[0], r[1], r[2], r[3]); var s0 = Math.min(r[3] * 0.75, 40 * W / 1000);
+        x.font = fontOf(null, s0); x.fillStyle = ink0; lines.forEach(function (t, i) { if (t) fitText(t, r[0] + 2, r[1] + s0 * (1.05 + 1.2 * i), r[2] - 4); }); return; }
+      lines.forEach(function (t, i) { var L = src[Math.min(i, src.length - 1)], toks = t.trim() ? t.trim().split(/\s+/) : [], ws = L.words || [];
+        if (i < src.length && toks.length === ws.length && ws.length) { // palavra por palavra, no lugar de cada uma
+          ws.forEach(function (w, q) { if (toks[q] === w.str) return; var size = L.size * Hh, wx = w.x * W, ww = w.w * W, wb = w.base * Hh;
+            var box = [wx - 1, wb - size * 0.92, ww + 2, size * 1.2], bg = bgColor(x, box), ink = inkColor(x, box);
+            var nx = ws[q + 1] ? ws[q + 1].x * W : r[0] + r[2]; x.fillStyle = bg; x.fillRect(box[0], box[1], box[2], box[3]);
+            x.font = fontOf(w, size); x.fillStyle = ink; x.textBaseline = 'alphabetic'; fitText(toks[q], wx, wb, Math.max(ww, nx - wx - size * 0.25)); });
+          return; }
+        // texto com outra quantidade de palavras: cobre a linha lida e escreve do começo dela
+        var size2 = L.size * Hh, lx0 = (ws.length ? ws[0].x : L.x) * W, lx1 = ws.length ? (ws[ws.length - 1].x + ws[ws.length - 1].w) * W : r[0] + r[2], b2 = (i < src.length ? L.base * Hh : src[src.length - 1].base * Hh + (i - src.length + 1) * size2 * 1.15);
+        var box2 = [lx0 - 1, b2 - size2 * 0.92, Math.max(lx1, r[0] + r[2]) - lx0 + 2, size2 * 1.2], ink2 = inkColor(x, box2); x.fillStyle = bgColor(x, box2); if (i < src.length) x.fillRect(box2[0], box2[1], box2[2], box2[3]);
+        x.font = fontOf(L, size2); x.fillStyle = ink2; if (t) fitText(t, lx0, b2, r[0] + r[2] - lx0); });
+    });
     x.fillStyle = '#000'; rects.filter(function (r) { return r.m === 't'; }).forEach(function (rec) { var r = px(rec); x.fillRect(Math.floor(r[0]), Math.floor(r[1]), Math.ceil(r[2]) + 1, Math.ceil(r[3]) + 1); });
     var hs = rects.filter(function (r) { return r.m === 'h'; }).map(px); if (!hs.length) return;
     var cp = document.createElement('canvas'); cp.width = W; cp.height = Hh; cp.getContext('2d').drawImage(c, 0, 0);
