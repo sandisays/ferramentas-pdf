@@ -32,5 +32,6 @@ npm test          # testes de segurança (precisa de Python com playwright)
 - `SHA256SUMS`: impressão digital do `index.html` publicado, para conferir que a cópia em uso é a original (`sha256sum -c SHA256SUMS`).
 - `LICENCAS-TERCEIROS.md`: bibliotecas embutidas, versões e licenças.
 - `tests/test_seguranca.py`: confere que a página não acessa a rede, não grava dados e que a tarja remove de verdade o texto original.
+- `tests/test_regressao.py`: compara as saídas de todas as abas entre a versão publicada e a nova antes de liberar uma atualização.
 
 Desenvolvido por Sandi.

@@ -4,7 +4,7 @@ O `index.html` embute as bibliotecas abaixo, nas versões fixadas em `package.js
 
 | Biblioteca | Versão | Licença | Para que serve |
 | --- | --- | --- | --- |
-| pdf.js (`pdfjs-dist`) | 3.11.174 | Apache-2.0 | Ler e desenhar PDFs |
+| pdf.js (`pdfjs-dist`) | 4.10.38 | Apache-2.0 | Ler e desenhar PDFs |
 | pdf-lib | 1.17.1 | MIT | Criar e alterar PDFs |
 | JSZip | 3.10.2 | MIT ou GPL-3.0 (usada sob MIT) | Montar arquivos .docx e .zip |
 | docx-preview | 0.3.7 | Apache-2.0 | Prévia do Word na tela Comparar |
@@ -15,4 +15,6 @@ O `index.html` embute as bibliotecas abaixo, nas versões fixadas em `package.js
 
 ## Observação de segurança
 
-O pdf.js 3.11.174 tem a falha CVE-2024-4367 (execução de código por fonte maliciosa em versões anteriores à 4.2.67). Ela está mitigada nesta página de duas formas: todas as chamadas usam `isEvalSupported: false` e a política de segurança (CSP) não permite `eval`. A atualização para a série 4 ou superior exige adaptar o motor de conversão e fica registrada como pendência.
+`npm audit` sem vulnerabilidades conhecidas em 14/11/2026. O pdf.js 4.10.38 já corrige a CVE-2024-4367; as duas proteções extras continuam ativas: `isEvalSupported: false` em todas as chamadas e política de segurança (CSP) que não permite `eval`.
+
+O pdf.js 4 é distribuído só como módulo (`.mjs`). O `build.py` converte o arquivo e o worker em scripts comuns para que a página continue funcionando aberta direto do disco, sem servidor.

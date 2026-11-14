@@ -22,10 +22,24 @@ def js(caminho):
     return s.replace('</script', '<\\/script').replace('<!--', '<\\!--')
 
 
+def modulo_como_script(caminho, global_):
+    """Converte o pdf.min.mjs (módulo) em script comum que publica as exportações em window.
+
+    O pdf.js 4 só é distribuído como módulo; um script comum embutido mantém a ordem de
+    carregamento da página e funciona aberto direto do disco. import.meta.url só aparece nos trechos exclusivos do Node."""
+    s = js(caminho).replace('import.meta.url', '""')
+    m = re.search(r'export\{([^}]*)\};?\s*$', s)
+    if not m:
+        raise SystemExit('formato inesperado em %s' % caminho)
+    pares = []
+    for item in m.group(1).split(','):
+        local, nome = [x.strip() for x in item.split(' as ')]
+        pares.append('%s:%s' % (nome, local))
+    return s[:m.start()] + 'globalThis.%s={%s};' % (global_, ','.join(pares))
+
+
 t = ler(SRC, 'template.html')
 for chave, caminho in [
-    ('PDFJS', os.path.join(NM, 'pdfjs-dist/legacy/build/pdf.min.js')),
-    ('WORKER', os.path.join(NM, 'pdfjs-dist/legacy/build/pdf.worker.min.js')),
     ('JSZIP', os.path.join(NM, 'jszip/dist/jszip.min.js')),
     ('DOCXPREV', os.path.join(NM, 'docx-preview/dist/docx-preview.min.js')),
     ('PDFLIB', os.path.join(NM, 'pdf-lib/dist/pdf-lib.min.js')),
@@ -35,6 +49,9 @@ for chave, caminho in [
     ('ENGINE', os.path.join(SRC, 'engine.js')),
 ]:
     t = t.replace('/*__%s__*/' % chave, js(caminho))
+t = t.replace('/*__PDFJS__*/', modulo_como_script(os.path.join(NM, 'pdfjs-dist/legacy/build/pdf.min.mjs'), 'pdfjsLib'))
+# o worker também vira script comum: worker de módulo a partir de blob não abre em página local (file://)
+t = t.replace('/*__WORKER__*/', modulo_como_script(os.path.join(NM, 'pdfjs-dist/legacy/build/pdf.worker.min.mjs'), 'pdfjsWorker'))
 
 t = t.replace('__DICT__', ler(SRC, 'dict.b64'))
 lang = open(os.path.join(NM, '@tesseract.js-data/por/4.0.0_best_int/por.traineddata.gz'), 'rb').read()

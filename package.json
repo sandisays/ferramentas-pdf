@@ -1,6 +1,6 @@
 {
   "name": "ferramentas-pdf",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "private": true,
   "description": "Ferramentas de PDF em página única, offline, sem envio de arquivos.",
   "scripts": {
@@ -13,7 +13,7 @@
     "docx-preview": "0.3.7",
     "jszip": "3.10.2",
     "pdf-lib": "1.17.1",
-    "pdfjs-dist": "3.11.174",
+    "pdfjs-dist": "4.10.38",
     "tesseract.js": "7.0.0",
     "tesseract.js-core": "6.1.2"
   }

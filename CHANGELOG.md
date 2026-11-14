@@ -1,5 +1,13 @@
 # Registro de mudanças
 
+## 1.2.0 — 14/11/2026
+
+Segurança
+- pdf.js atualizado de 3.11.174 para 4.10.38, que corrige a CVE-2024-4367 (execução de código por fonte maliciosa). `npm audit` sem vulnerabilidades.
+
+Qualidade
+- Teste de regressão (`tests/test_regressao.py`): compara converter, comprimir, OCR, juntar, dividir, organizar e PDF→imagem entre duas versões. Da 1.1.0 para a 1.2.0 o Word gerado ficou idêntico (XML igual) nos 6 PDFs de teste, e os PDFs gerados mantiveram páginas e texto.
+
 ## 1.1.0 — 14/11/2026
 
 Segurança
