@@ -1,5 +1,14 @@
 # Registro de mudanças
 
+## 1.3.0 — 14/11/2026
+
+Novidades
+- **Ler QR Code:** nova ferramenta. Lê todos os QR Codes de cada página de um PDF, de uma imagem ou de um print colado com Ctrl+V (jsQR 1.4.0). O botão "Abrir o link" só abre o endereço quando a pessoa clica.
+
+Conversor para Word
+- Tabela cortada pela página (as colunas descem até o fim da folha sem linha de fechamento, como quando a tabela continua na página seguinte) agora vira tabela no Word, com células editáveis, em vez de texto solto com tabulações.
+
+
 ## 1.2.0 — 14/11/2026
 
 Segurança

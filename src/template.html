@@ -54,6 +54,7 @@
   .flist li.done::before { content:"DOCX"; background:#2b579a; font-size:10px; }
   .flist li.done2 { grid-template-columns:1fr auto; }
   .flist li.done3::before { content:"PDF"; background:#1b6b57; }
+  .flist li.isimg::before { content:"IMG"; }
   .flist li.bad::before { content:"?"; font-size:18px; padding-bottom:9px; background:var(--mute); }
   .name { font-weight:600; overflow-wrap:anywhere; }
   .st { grid-column: 1 / -1; font-size:13px; color:var(--mute); }
@@ -74,6 +75,12 @@
   footer { margin-top:22px; color:var(--mute); font-size:13px; text-align:center; }
   .credit { margin-top:6px; font-weight:600; color:var(--ink); }
   .credit span { color:var(--acc); }
+  .qrres { grid-column:1 / -1; display:flex; flex-direction:column; gap:8px; margin-top:6px; }
+  .qrit { border:1px solid var(--line); border-radius:10px; padding:10px 12px; background:var(--bg); }
+  .qrit .qpg { font-size:12px; color:var(--mute); margin-bottom:4px; }
+  .qrit .qtx { font-family:ui-monospace,Consolas,monospace; font-size:13px; word-break:break-all; white-space:pre-wrap; user-select:all; }
+  .qrit .qbt { display:flex; gap:8px; margin-top:8px; flex-wrap:wrap; }
+  .qrit .qbt .btn { padding:6px 12px; font-size:13px; }
   .credit .sep { color:var(--mute); margin:0 6px; font-weight:400; }
   #privLink { background:none; border:0; padding:0; font:inherit; font-weight:600; color:var(--acc); cursor:pointer; text-decoration:underline; text-underline-offset:3px; }
   #cmpDlg { width:calc(100% - 24px); max-width:1500px; height:calc(100% - 24px); max-height:none; border:1px solid var(--line); border-radius:16px; background:var(--card); color:var(--ink); padding:0; box-shadow:var(--shadow); }
@@ -184,6 +191,7 @@
     <button role="tab" data-tab="org" aria-selected="false"><span class="ti"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M14 17.5h7M17.5 14v7"/></svg></span><span class="tt"><b>Organizar</b><small>Girar, apagar, reordenar</small></span></button>
     <button role="tab" data-tab="img2pdf" aria-selected="false"><span class="ti"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/></svg></span><span class="tt"><b>Imagens → PDF</b><small>Fotos e prints em PDF</small></span></button>
     <button role="tab" data-tab="pdf2img" aria-selected="false"><span class="ti"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><circle cx="10" cy="12" r="1.5"/><path d="m17 18-3-3-5 5"/></svg></span><span class="tt"><b>PDF → Imagem</b><small>Páginas em JPG ou PNG</small></span></button>
+    <button role="tab" data-tab="qr" aria-selected="false"><span class="ti"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v.01M14 20h.01M17 20h4v-3"/></svg></span><span class="tt"><b>Ler QR Code</b><small>De PDF, foto ou print</small></span></button>
   </nav>
 
   <section class="panel" data-panel="conv">
@@ -329,6 +337,18 @@
     <ul id="list_pdf2img" class="flist"></ul>
   </section>
 
+  <section class="panel" data-panel="qr" hidden>
+    <div id="drop_qr" class="drop" tabindex="0" role="button" aria-label="Escolher arquivos">
+      <div class="dropicon"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4"/><path d="m7 9 5-5 5 5"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg></div>
+      <strong>Arraste o PDF ou a imagem</strong>
+      <span>Encontra todos os QR Codes de cada página. Também dá para colar um print com Ctrl+V.</span><br>
+      <span class="pick">Escolher arquivos</span>
+      <input id="file_qr" type="file" accept="application/pdf,.pdf,image/*" multiple hidden>
+    </div>
+    <div class="row" id="actions_qr" hidden><h2>Resultados</h2><div><button class="btn ghost" id="clear_qr">Limpar</button></div></div>
+    <ul id="list_qr" class="flist"></ul>
+  </section>
+
   <div class="limits" id="limits">
     <b class="t"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>Antes de usar, saiba que</b>
     <ul>
@@ -379,6 +399,8 @@
       <li>A única coisa guardada no navegador é a sua escolha de modo claro ou escuro. Nenhum arquivo ou dado de documento é guardado.</li>
       <li>A página tem uma regra de segurança (Content Security Policy) que bloqueia qualquer conexão de rede, então ela não consegue enviar dados mesmo que tentasse.</li>
     </ul>
+    <h3>Ler QR Code</h3>
+    <p>O código é lido no próprio computador. Só quando você clica em <b>Abrir o link</b> o endereço do código é aberto numa nova aba, usando a internet, como em qualquer link.</p>
     <h3>Tarja e dado fictício</h3>
     <p>Nas páginas alteradas, o conteúdo original é apagado de verdade (a página vira imagem) e os dados do arquivo, como título e autor, são removidos. Confira sempre o resultado antes de enviar.</p>
     <h3>LGPD</h3>
@@ -391,6 +413,7 @@
 <script type="text/plain" id="pdfworker">/*__WORKER__*/</script>
 <script>/*__JSZIP__*/</script>
 <script>/*__DOCXPREV__*/</script>
+<script>/*__JSQR__*/</script>
 <script>/*__PDFLIB__*/</script>
 <script>/*__TESS__*/</script>
 <script type="text/plain" id="ocr-worker">/*__TESSWORKER__*/</script>
@@ -640,7 +663,7 @@
   drop.onclick = function () { file.click(); };
   drop.onkeydown = function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); file.click(); } };
   file.onchange = function () { add(file.files); file.value = ''; };
-  var tab = 'conv', drops = { conv: drop, join: $('dropJ'), comp: $('dropC'), ocr: $('dropO'), red: $('drop_red'), split: $('drop_split'), org: $('drop_org'), img2pdf: $('drop_img2pdf'), pdf2img: $('drop_pdf2img') }, adders = { conv: add };
+  var tab = 'conv', drops = { conv: drop, join: $('dropJ'), comp: $('dropC'), ocr: $('dropO'), red: $('drop_red'), split: $('drop_split'), org: $('drop_org'), img2pdf: $('drop_img2pdf'), pdf2img: $('drop_pdf2img'), qr: $('drop_qr') }, adders = { conv: add };
   window.__adders = adders;
   function hasFiles(e) { return e.dataTransfer && Array.prototype.indexOf.call(e.dataTransfer.types || [], 'Files') >= 0; }
   ['dragenter', 'dragover'].forEach(function (t) { document.addEventListener(t, function (e) { if (!hasFiles(e)) return; e.preventDefault(); drops[tab].classList.add('over'); }); });
@@ -651,7 +674,7 @@
     Array.prototype.forEach.call(document.querySelectorAll('[data-panel]'), function (p) { p.hidden = p.getAttribute('data-panel') !== n; });
     Array.prototype.forEach.call(document.querySelectorAll('[data-only]'), function (p) { p.hidden = p.getAttribute('data-only') !== n; }); }
   Array.prototype.forEach.call(document.querySelectorAll('.tabs button'), function (b) { b.onclick = function () { showTab(b.getAttribute('data-tab')); }; });
-  window.__ctx = { $: $, save: save, adders: adders, renderPage: renderPage, drops: drops, OCR: OCR };
+  window.__ctx = { $: $, save: save, adders: adders, renderPage: renderPage, drops: drops, OCR: OCR, tab: function () { return tab; } };
   $('all').onclick = function () { results.forEach(function (r, i) { setTimeout(function () { save(r.name, r.data); }, i * 400); }); };
   $('clear').onclick = function () { if (busy) return; list.innerHTML = ''; results = []; $('actions').hidden = true; };
 })();
@@ -1362,6 +1385,66 @@
     busyP = false;
   }
   $('clear_pdf2img').onclick = function () { if (busyP) return; listP.innerHTML = ''; $('actions_pdf2img').hidden = true; };
+
+  /* ================= LER QR CODE ================= */
+  var listQ = $('list_qr'), qQ = [], busyQ = false;
+  function addQ(files) {
+    Array.prototype.forEach.call(files, function (f) { var li = el('li'), nm = el('div', 'name'), slot = el('div'), bar = el('div', 'bar', '<i></i>'), st = el('div', 'st'), res = el('div', 'qrres');
+      nm.textContent = f.name || 'imagem colada'; if (!H.isPdf(f)) li.classList.add('isimg'); li.appendChild(nm); li.appendChild(slot); li.appendChild(bar); li.appendChild(st); li.appendChild(res); listQ.appendChild(li);
+      if (!H.isPdf(f) && !isImg(f)) { st.textContent = 'Use um PDF ou uma imagem (JPG, PNG…).'; st.className = 'st err'; li.className = 'bad'; bar.hidden = true; }
+      else { st.textContent = 'Na fila…'; qQ.push({ f: f, li: li, bar: bar, st: st, res: res }); } });
+    $('actions_qr').hidden = !listQ.children.length; runQ();
+  }
+  wire2('qr', addQ);
+  document.addEventListener('paste', function (e) { // print colado com Ctrl+V (só na aba Ler QR Code)
+    if (C.tab && C.tab() !== 'qr') return; var it = e.clipboardData && e.clipboardData.items, fs = [];
+    if (it) for (var k = 0; k < it.length; k++) if (it[k].kind === 'file' && /^image\//.test(it[k].type)) { var b = it[k].getAsFile(); if (b) fs.push(new File([b], 'imagem colada.png', { type: b.type })); }
+    if (fs.length) { e.preventDefault(); addQ(fs); } });
+  // procura vários códigos: acha um, apaga a área dele e procura de novo; se não achar, tenta em pedaços
+  function scanCanvas(c) {
+    var x = c.getContext('2d', { willReadFrequently: true }), out = [], seen = {};
+    var tryArea = function (sx, sy, sw, sh) {
+      for (var n = 0; n < 12; n++) { var d = x.getImageData(sx, sy, sw, sh), r = jsQR(d.data, sw, sh, { inversionAttempts: 'attemptBoth' });
+        if (!r || !r.location) break; var L = r.location, ps = [L.topLeftCorner, L.topRightCorner, L.bottomRightCorner, L.bottomLeftCorner];
+        if (r.data && !seen[r.data]) { seen[r.data] = 1; out.push(r.data); }
+        x.fillStyle = '#fff'; x.beginPath(); var cx = 0, cy = 0; ps.forEach(function (p) { cx += p.x / 4; cy += p.y / 4; });
+        ps.forEach(function (p, k) { var px = sx + cx + (p.x - cx) * 1.25, py = sy + cy + (p.y - cy) * 1.25; if (k) x.lineTo(px, py); else x.moveTo(px, py); }); x.closePath(); x.fill(); } };
+    tryArea(0, 0, c.width, c.height);
+    if (!out.length) { var w2 = Math.ceil(c.width * 0.6), h2 = Math.ceil(c.height * 0.6);
+      [[0, 0], [c.width - w2, 0], [0, c.height - h2], [c.width - w2, c.height - h2]].forEach(function (o) { tryArea(o[0], o[1], w2, h2); }); }
+    return out;
+  }
+  async function scanAt(getCanvas) { var res = []; for (var dpi of [200, 300]) { var c = await getCanvas(dpi); res = scanCanvas(c); c.width = c.height = 0; if (res.length) break; } return res; }
+  function showCodes(box, found) {
+    found.forEach(function (q) { var d = el('div', 'qrit'), p = el('div', 'qpg'), tx = el('div', 'qtx'), bt = el('div', 'qbt');
+      p.textContent = q.where; tx.textContent = q.text; d.appendChild(p); d.appendChild(tx);
+      var cp = el('button', 'btn ghost', 'Copiar'); cp.onclick = function () { var done = function () { cp.textContent = 'Copiado'; setTimeout(function () { cp.textContent = 'Copiar'; }, 1500); };
+        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(q.text).then(done, function () { selectText(tx); }); else selectText(tx); };
+      bt.appendChild(cp);
+      if (/^https?:\/\/\S+$/i.test(q.text.trim())) { var a = el('a', 'btn ghost', 'Abrir o link'); a.href = q.text.trim(); a.target = '_blank'; a.rel = 'noopener noreferrer';
+        a.title = 'Abre o endereço numa nova aba (usa a internet)'; bt.appendChild(a); }
+      d.appendChild(bt); box.appendChild(d); }); }
+  function selectText(n) { var r = document.createRange(); r.selectNodeContents(n); var s = getSelection(); s.removeAllRanges(); s.addRange(r); }
+  async function runQ() {
+    if (busyQ) return; busyQ = true;
+    while (qQ.length) { var j = qQ.shift(), found = [];
+      try {
+        if (H.isPdf(j.f)) { var d = await pdfjsDoc(new Uint8Array(await j.f.arrayBuffer()));
+          for (var k = 1; k <= d.numPages; k++) { j.bar.firstChild.style.width = Math.round((k - 1) / d.numPages * 100) + '%'; j.st.textContent = 'Procurando na página ' + k + ' de ' + d.numPages;
+            var pg = await d.getPage(k); (await scanAt(function (dpi) { return renderCanvas(pg, capScale(pg, dpi, 4500)); })).forEach(function (s) { found.push({ where: 'Página ' + k, text: s }); }); pg.cleanup(); }
+          try { await d.destroy(); } catch (e) {}
+        } else { j.st.textContent = 'Procurando…';
+          var bmp = await createImageBitmap(j.f), W0 = bmp.width, H0 = bmp.height;
+          (await scanAt(function (dpi) { var s = Math.min(dpi === 200 ? 1 : 2, 4500 / Math.max(W0, H0)), c = document.createElement('canvas'); c.width = Math.round(W0 * s); c.height = Math.round(H0 * s);
+            var x = c.getContext('2d', { willReadFrequently: true }); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); x.drawImage(bmp, 0, 0, c.width, c.height); return c; }))
+            .forEach(function (s) { found.push({ where: 'Imagem', text: s }); }); bmp.close(); }
+        j.bar.hidden = true;
+        if (found.length) { j.li.classList.add('done3'); j.st.className = 'st ok'; j.st.textContent = found.length + (found.length > 1 ? ' QR Codes encontrados.' : ' QR Code encontrado.'); showCodes(j.res, found); }
+        else { j.st.className = 'st warn'; j.st.textContent = 'Nenhum QR Code encontrado. Se o código estiver pequeno ou borrado, tente uma imagem com mais resolução.'; }
+      } catch (e) { j.bar.hidden = true; j.st.className = 'st err'; j.li.className = 'bad'; j.st.textContent = H.errMsg(e); } }
+    busyQ = false;
+  }
+  $('clear_qr').onclick = function () { if (busyQ) return; listQ.innerHTML = ''; $('actions_qr').hidden = true; };
 })();
 </script>
 </body>

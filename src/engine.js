@@ -273,8 +273,23 @@ function createPdf2Docx(pdfjsLib, JSZip, env) {
     const tables = [], loose = [];
     for (const k in comps) {
       const c = comps[k];
-      if (c.h.length >= 2 && c.v.length >= 2) {
-        const xs = cluster(c.v.map(v => v.x).concat(), 2), ys = cluster(c.h.map(h => h.y), 2);
+      // tabela cortada pela página (continua na seguinte ou veio da anterior): as colunas descem até a borda sem linha
+      // de fechamento. Fecha com uma linha invisível antes do primeiro texto que atravessa as colunas (rodapé).
+      const virt = [];
+      if (c.h.length >= 1 && c.v.length >= 3) {
+        const vx = c.v.map(v => v.x), x0 = Math.min(...vx), x1 = Math.max(...vx);
+        const hy = c.h.map(h => h.y), hTop = Math.min(...hy), hBot = Math.max(...hy);
+        const crosses = it => vx.some(x => it.x < x - 1 && it.x + it.w > x + 1) && it.x < x1 && it.x + it.w > x0;
+        const longDown = c.v.filter(v => v.y1 > hBot + 20).length >= 3, longUp = c.v.filter(v => v.y0 < hTop - 20).length >= 3;
+        if (longDown) { let yb = Math.min(pg.H, Math.max(...c.v.map(v => v.y1)));
+          for (const it of pg.items) { const top = it.y - it.size; if (top > hBot + 2 && top < yb && crosses(it)) yb = top - 1; }
+          if (yb > hBot + 6) { virt.push(yb); for (const v of c.v) if (v.y1 > yb) v.y1 = yb; } }
+        if (longUp) { let yt = Math.max(0, Math.min(...c.v.map(v => v.y0)));
+          for (const it of pg.items) { const bot = it.y + it.size * 0.25; if (bot < hTop - 2 && bot > yt && crosses(it)) yt = bot + 1; }
+          if (yt < hTop - 6) { virt.push(yt); for (const v of c.v) if (v.y0 < yt) v.y0 = yt; } }
+      }
+      if (c.h.length + virt.length >= 2 && c.v.length >= 2) {
+        const xs = cluster(c.v.map(v => v.x).concat(), 2), ys = cluster(c.h.map(h => h.y).concat(virt), 2);
         const minX = Math.min(...c.h.map(h => h.x0)), maxX = Math.max(...c.h.map(h => h.x1));
         const minY = Math.min(...c.v.map(v => v.y0)), maxY = Math.max(...c.v.map(v => v.y1));
         if (minX < xs[0] - 3) xs.unshift(minX); if (maxX > xs[xs.length - 1] + 3) xs.push(maxX);

@@ -12,6 +12,8 @@ O `index.html` embute as bibliotecas abaixo, nas versões fixadas em `package.js
 | tesseract.js-core | 6.1.2 | Apache-2.0 | Motor do OCR em WebAssembly |
 | Dados de idioma português (`@tesseract.js-data/por`) | 1.0.0 | MIT | Modelo de português do OCR |
 | Fonte Fredoka (`@fontsource/fredoka`) | 5.3.0 | OFL-1.1 | Fonte dos títulos |
+| jsQR | 1.4.0 | Apache-2.0 | Ler QR Codes |
+| Lista de palavras derivada do wordfreq (`src/dict.b64`, gerada por `src/dicionario.py`) | 3.1.1 | dados CC BY-SA 4.0 (Robyn Speer e colaboradores) | Dicionário do Dado fictício |
 
 ## Observação de segurança
 

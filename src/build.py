@@ -42,6 +42,7 @@ t = ler(SRC, 'template.html')
 for chave, caminho in [
     ('JSZIP', os.path.join(NM, 'jszip/dist/jszip.min.js')),
     ('DOCXPREV', os.path.join(NM, 'docx-preview/dist/docx-preview.min.js')),
+    ('JSQR', os.path.join(NM, 'jsqr/dist/jsQR.js')),
     ('PDFLIB', os.path.join(NM, 'pdf-lib/dist/pdf-lib.min.js')),
     ('TESS', os.path.join(NM, 'tesseract.js/dist/tesseract.min.js')),
     ('TESSWORKER', os.path.join(NM, 'tesseract.js/dist/worker.min.js')),
