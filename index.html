@@ -74,6 +74,16 @@
   footer { margin-top:22px; color:var(--mute); font-size:13px; text-align:center; }
   .credit { margin-top:6px; font-weight:600; color:var(--ink); }
   .credit span { color:var(--acc); }
+  .credit .sep { color:var(--mute); margin:0 6px; font-weight:400; }
+  #privLink { background:none; border:0; padding:0; font:inherit; font-weight:600; color:var(--acc); cursor:pointer; text-decoration:underline; text-underline-offset:3px; }
+  #privDlg { max-width:560px; width:calc(100% - 32px); border:1px solid var(--line); border-radius:16px; background:var(--card); color:var(--ink); padding:22px 24px; box-shadow:var(--shadow); text-align:left; }
+  #privDlg::backdrop { background:rgba(20,14,12,.45); }
+  #privDlg h2 { font-family:'Fredoka','Trebuchet MS',system-ui,sans-serif; font-size:22px; margin:0 0 4px; }
+  #privDlg h3 { font-size:15px; margin:16px 0 4px; }
+  #privDlg p, #privDlg li { font-size:14px; margin:4px 0; color:var(--ink); }
+  #privDlg ul { padding-left:20px; margin:4px 0; }
+  #privDlg .small { color:var(--mute); font-size:12.5px; }
+  #privDlg .x { float:right; }
   .tabs { display:grid; grid-template-columns:repeat(3, 1fr); gap:6px; background:var(--card); padding:8px; border-radius:16px; box-shadow:var(--shadow); margin-bottom:16px; }
   .tabs button { font:inherit; border:0; background:transparent; color:var(--ink); padding:10px; border-radius:12px; cursor:pointer; display:flex; align-items:center; gap:10px; text-align:left; transition: background .15s, color .15s; }
   .tabs button:hover { background:var(--accbg); }
@@ -330,8 +340,32 @@
   </details>
   <footer>
     Arquivo único: guarde este .html no computador ou pen drive e abra com dois cliques (Chrome, Edge ou Firefox).
-    <div class="credit">Desenvolvido por <span>Sandi</span></div>
+    <div class="credit">Desenvolvido por <span>Sandi</span><span class="sep">·</span><button type="button" id="privLink">Política de privacidade</button></div>
   </footer>
+  <dialog id="privDlg" aria-labelledby="privTitle">
+    <button type="button" class="btn ghost x" id="privClose">Fechar</button>
+    <h2 id="privTitle">Política de privacidade</h2>
+    <p class="small">Ferramentas PDF</p>
+    <h3>Resumo</h3>
+    <p>Seus arquivos não saem do seu computador. Esta página não coleta, não envia e não guarda nenhum dado dos seus documentos.</p>
+    <h3>Como os arquivos são tratados</h3>
+    <ul>
+      <li>Todo o processamento (converter, OCR, tarjar, comprimir, juntar, dividir, organizar e transformar em imagem) acontece dentro do navegador, na memória do computador.</li>
+      <li>Não existe servidor: nenhum arquivo, texto ou imagem é enviado pela internet. A página funciona até sem conexão.</li>
+      <li>Ao fechar ou recarregar a aba, tudo some da memória. O único arquivo criado é o que você baixa.</li>
+    </ul>
+    <h3>O que não é usado</h3>
+    <ul>
+      <li>Sem cadastro, login, cookies, contador de acessos, anúncios ou ferramentas de análise.</li>
+      <li>A única coisa guardada no navegador é a sua escolha de modo claro ou escuro. Nenhum arquivo ou dado de documento é guardado.</li>
+      <li>A página tem uma regra de segurança (Content Security Policy) que bloqueia qualquer conexão de rede, então ela não consegue enviar dados mesmo que tentasse.</li>
+    </ul>
+    <h3>Tarja e dado fictício</h3>
+    <p>Nas páginas alteradas, o conteúdo original é apagado de verdade (a página vira imagem) e os dados do arquivo, como título e autor, são removidos. Confira sempre o resultado antes de enviar.</p>
+    <h3>LGPD</h3>
+    <p>Como nenhum dado pessoal é coletado ou guardado por esta ferramenta, não há tratamento de dados por parte dela. Quem usa continua responsável pelos documentos que abre e compartilha, conforme as regras da sua empresa.</p>
+    <p class="small">Se esta página for hospedada em um site (por exemplo, GitHub Pages), o provedor do site pode registrar o acesso à página, como qualquer site. Os arquivos que você abre continuam sem sair do computador.</p>
+  </dialog>
 </main>
 
 <script>/**
@@ -1788,6 +1822,9 @@ if (typeof module !== 'undefined') module.exports = createPdf2Docx;
   try { pref = localStorage.getItem('conv-modo'); } catch (e) {}
   function applyMode() { var dark = pref ? pref === 'dark' : !!(mq && mq.matches); var r = document.documentElement;
     if (pref) r.setAttribute('data-theme', pref); else r.removeAttribute('data-theme'); r.setAttribute('data-dark', dark ? '1' : '0'); }
+  (function () { var d = $('privDlg'), open = function () { if (d.showModal) d.showModal(); else d.setAttribute('open', ''); };
+    $('privLink').onclick = open; $('privClose').onclick = function () { if (d.close) d.close(); else d.removeAttribute('open'); };
+    d.addEventListener('click', function (e) { if (e.target === d && d.close) d.close(); }); })();
   applyMode(); if (mq && mq.addEventListener) mq.addEventListener('change', applyMode);
   $('theme').onclick = function () { pref = document.documentElement.getAttribute('data-dark') === '1' ? 'light' : 'dark'; try { localStorage.setItem('conv-modo', pref); } catch (e) {} applyMode(); };
   var drop = $('drop'), file = $('file');
@@ -2123,7 +2160,7 @@ if (typeof module !== 'undefined') module.exports = createPdf2Docx;
   /* ---- gerador de dados fictícios ---- */
   var NAMES = ['Ana', 'Rui', 'Lima', 'Nome', 'Rosa', 'Silva', 'Souza', 'Costa', 'Campos', 'Pereira', 'Exemplo', 'Oliveira', 'Fernandes', 'Albuquerque'];
   function nameLike(len, st, orig) { var best = null, bd = 99; for (var q = 0; q < NAMES.length; q++) { var n = NAMES[(q + st.m) % NAMES.length], d = Math.abs(n.length - len) + (st.used[n] ? 3 : 0) + (orig && n.toUpperCase() === orig.toUpperCase() ? 50 : 0); if (d < bd) { bd = d; best = n; } } st.used[best] = 1; return best; }
-  var PAISES = {}; 'AFEGANISTAO|AFRICA DO SUL|ALBANIA|ALEMANHA|ANDORRA|ANGOLA|ANTIGUA E BARBUDA|ARABIA SAUDITA|ARGELIA|ARGENTINA|ARMENIA|ARUBA|AUSTRALIA|AUSTRIA|AZERBAIJAO|BAHAMAS|BAHREIN|BAREIN|BANGLADESH|BARBADOS|BELGICA|BELIZE|BENIN|BIELORRUSSIA|BOLIVIA|BOSNIA|BOSNIA E HERZEGOVINA|BOTSUANA|BRASIL|BRUNEI|BULGARIA|BURKINA FASO|BURUNDI|BUTAO|CABO VERDE|CAMAROES|CAMBOJA|CANADA|CATAR|QATAR|CAZAQUISTAO|CHADE|CHILE|CHINA|CHIPRE|CINGAPURA|SINGAPURA|COLOMBIA|COMORES|CONGO|COREIA|COREIA DO SUL|COREIA DO NORTE|COSTA DO MARFIM|COSTA RICA|CROACIA|CUBA|CURACAO|DINAMARCA|DJIBUTI|DOMINICA|EGITO|EL SALVADOR|EMIRADOS ARABES|EMIRADOS ARABES UNIDOS|EAU|EQUADOR|ERITREIA|ESLOVAQUIA|ESLOVENIA|ESPANHA|ESTADOS UNIDOS|EUA|ESTONIA|ESSUATINI|ETIOPIA|FIJI|FILIPINAS|FINLANDIA|FRANCA|GABAO|GAMBIA|GANA|GEORGIA|GRANADA|GRECIA|GUATEMALA|GUIANA|GUIANA FRANCESA|GUINE|GUINE BISSAU|GUINE EQUATORIAL|HAITI|HOLANDA|PAISES BAIXOS|HONDURAS|HONG KONG|HUNGRIA|IEMEN|ILHAS MAURICIO|MAURICIO|INDIA|INDONESIA|INGLATERRA|REINO UNIDO|IRA|IRAQUE|IRLANDA|ISLANDIA|ISRAEL|ITALIA|JAMAICA|JAPAO|JORDANIA|KOSOVO|KUWAIT|KWAIT|LAOS|LESOTO|LETONIA|LIBANO|LIBERIA|LIBIA|LIECHTENSTEIN|LITUANIA|LUXEMBURGO|MACAU|MACEDONIA|MACEDONIA DO NORTE|MADAGASCAR|MALASIA|MALAUI|MALDIVAS|MALI|MALTA|MARROCOS|MAURITANIA|MEXICO|MIANMAR|MICRONESIA|MOCAMBIQUE|MOLDAVIA|MONACO|MONGOLIA|MONTENEGRO|NAMIBIA|NEPAL|NICARAGUA|NIGER|NIGERIA|NORUEGA|NOVA CALEDONIA|NOVA ZELANDIA|OMA|PALESTINA|PANAMA|PAPUA NOVA GUINE|PAQUISTAO|PARAGUAI|PERU|POLINESIA FRANCESA|POLONIA|PORTO RICO|PORTUGAL|QUENIA|QUIRGUISTAO|REPUBLICA CHECA|TCHEQUIA|REPUBLICA DOMINICANA|ROMENIA|RUANDA|RUSSIA|SAMOA|SANTA LUCIA|SAO TOME E PRINCIPE|SAO VICENTE E GRANADINAS|SENEGAL|SERRA LEOA|SERVIA|SEICHELES|SIRIA|SOMALIA|SRI LANKA|SUDAO|SUDAO DO SUL|SUECIA|SUICA|SURINAME|TAILANDIA|TAIWAN|TAJIQUISTAO|TANZANIA|TIMOR LESTE|TOGO|TONGA|TRINIDAD E TOBAGO|TUNISIA|TURCOMENISTAO|TURQUIA|UCRANIA|UGANDA|UNIAO EUROPEIA|URUGUAI|UZBEQUISTAO|VANUATU|VATICANO|VENEZUELA|VIETNA|VIETNAME|ZAMBIA|ZIMBABUE'.split('|').forEach(function (p) { PAISES[p] = 1; });
+  var PAISES = {}; 'AFEGANISTAO|AFRICA DO SUL|ALBANIA|ALEMANHA|ANDORRA|ANGOLA|ANTIGUA E BARBUDA|ARABIA SAUDITA|ARGELIA|ARGENTINA|ARMENIA|ARUBA|AUSTRALIA|AUSTRIA|AZERBAIJAO|BAHAMAS|BAHREIN|BAREIN|BANGLADESH|BARBADOS|BELGICA|BELIZE|BENIN|BIELORRUSSIA|BOLIVIA|BOSNIA|BOSNIA E HERZEGOVINA|BOTSUANA|BRASIL|BRUNEI|BULGARIA|BURKINA FASO|BURUNDI|BUTAO|CABO VERDE|CAMAROES|CAMBOJA|CANADA|CATAR|QATAR|CAZAQUISTAO|CHADE|CHILE|CHINA|CHIPRE|CINGAPURA|SINGAPURA|COLOMBIA|COMORES|CONGO|COREIA|COREIA DO SUL|COREIA DO NORTE|COSTA DO MARFIM|COSTA RICA|CROACIA|CUBA|CURACAO|DINAMARCA|DJIBUTI|DOMINICA|EGITO|EL SALVADOR|EMIRADOS ARABES|EMIRADOS ARABES UNIDOS|EAU|EQUADOR|ERITREIA|ESLOVAQUIA|ESLOVENIA|ESPANHA|ESTADOS UNIDOS|EUA|ESTONIA|ESSUATINI|ETIOPIA|FIJI|FILIPINAS|FINLANDIA|FRANCA|GABAO|GAMBIA|GANA|GEORGIA|GRANADA|GRECIA|GUATEMALA|GUIANA|GUIANA FRANCESA|GUINE|GUINE BISSAU|GUINE EQUATORIAL|HAITI|HOLANDA|PAISES BAIXOS|HONDURAS|HONG KONG|HUNGRIA|IEMEN|ILHAS MAURICIO|MAURICIO|INDIA|INDONESIA|INGLATERRA|REINO UNIDO|IRA|IRAQUE|IRLANDA|ISLANDIA|ISRAEL|ITALIA|JAMAICA|JAPAO|JORDANIA|KOSOVO|KUWAIT|KWAIT|LAOS|LESOTO|LETONIA|LIBANO|LIBERIA|LIBIA|LIECHTENSTEIN|LITUANIA|LUXEMBURGO|MACAU|MACEDONIA|MACEDONIA DO NORTE|MADAGASCAR|MALASIA|MALAUI|MALDIVAS|MALI|MALTA|MARROCOS|MAURITANIA|MEXICO|MIANMAR|MICRONESIA|MOCAMBIQUE|MOLDAVIA|MONACO|MONGOLIA|MONTENEGRO|NAMIBIA|NEPAL|NICARAGUA|NIGER|NIGERIA|NORUEGA|NOVA CALEDONIA|NOVA ZELANDIA|OMA|PALESTINA|PANAMA|PAPUA NOVA GUINE|PAQUISTAO|PARAGUAI|PERU|POLINESIA FRANCESA|POLONIA|PORTO RICO|PORTUGAL|QUENIA|QUIRGUISTAO|REPUBLICA CHECA|TCHEQUIA|REPUBLICA DOMINICANA|ROMENIA|RUANDA|RUSSIA|SAMOA|SANTA LUCIA|SAO TOME E PRINCIPE|SAO VICENTE E GRANADINAS|SENEGAL|SERRA LEOA|SERVIA|SEICHELES|SIRIA|SOMALIA|SRI LANKA|SUDAO|SUDAO DO SUL|SUECIA|SUICA|SURINAME|TAILANDIA|TAIWAN|TAJIQUISTAO|TANZANIA|TIMOR LESTE|TOGO|TONGA|TRINIDAD E TOBAGO|TUNISIA|TURCOMENISTAO|TURQUIA|UCRANIA|UGANDA|UNIAO EUROPEIA|URUGUAI|UZBEQUISTAO|VANUATU|VATICANO|VENEZUELA|VIETNA|VIETNAME|ZAMBIA|ZIMBABUE|ACRE|ALAGOAS|AMAPA|AMAZONAS|BAHIA|CEARA|DISTRITO FEDERAL|ESPIRITO SANTO|GOIAS|MARANHAO|MATO GROSSO|MATO GROSSO DO SUL|MINAS GERAIS|PARA|PARAIBA|PARANA|PERNAMBUCO|PIAUI|RIO DE JANEIRO|RIO GRANDE DO NORTE|RIO GRANDE DO SUL|RONDONIA|RORAIMA|SANTA CATARINA|SAO PAULO|SERGIPE|TOCANTINS'.split('|').forEach(function (p) { PAISES[p] = 1; });
   var norm = function (w) { return w.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().replace(/[^A-Z ]/g, ''); };
   // dicionário de palavras comuns (português, inglês e espanhol, sem nomes de pessoas): carregado em segundo plano
   var DIC = null; (function () { var el = document.getElementById('dictz'); if (!el || !window.JSZip) return;
@@ -2140,7 +2177,7 @@ if (typeof module !== 'undefined') module.exports = createPdf2Docx;
     // empresa: a primeira palavra antes de LTDA/S.A. vira "Empresa"
     for (i = 1; i < words.length; i++) if (/^(LTDA|S\.?A|EIRELI|EPP)\.?[,;]?$/i.test(words[i])) { var j = i - 1;
       while (j > 0 && i - j < 4 && /^[A-Za-zÀ-ÿ&]+$/.test(words[j - 1]) && !/:$/.test(words[j - 1]) && words[j - 1] === words[j - 1].toUpperCase() === (words[j] === words[j].toUpperCase())) j--;
-      if (/^[A-Za-zÀ-ÿ&]+$/.test(words[j])) { out[j] = words[j] === words[j].toUpperCase() ? 'EMPRESA' : 'Empresa'; fixed[j] = 1; } }
+      if (/^[A-Za-zÀ-ÿ&]+$/.test(words[j])) { var em = words[j].length >= 6 ? 'Empresa' : 'Firma'; out[j] = words[j] === words[j].toUpperCase() ? em.toUpperCase() : em; fixed[j] = 1; } }
     // referências fixas: art. 299, Decreto nº 9.013, de 29 de março de 2017, VERSÃO: 3 de 05/10/2021
     for (i = 0; i < words.length; i++) { var wl = words[i].replace(/[,;]$/, '');
       if (/^(art|arts|artigo|lei|decreto|decreto-lei|portaria|resolu[cç][aã]o|rdc|in|instru[cç][aã]o|normativa|of[ií]cio|of[ií]cio-circular|circular|memorando|§)\.?$/i.test(wl)) {
@@ -2148,7 +2185,7 @@ if (typeof module !== 'undefined') module.exports = createPdf2Docx;
       if (/^\d{4}[.,;]?$/.test(words[i]) && i >= 2 && /^de$/i.test(words[i - 1]) && MESES.test(words[i - 2])) fixed[i] = 1;
       if (/^(vers[aã]o|version|rev|revis[aã]o):?\.?$/i.test(words[i])) for (n = i + 1; n < words.length && n <= i + 3; n++) fixed[n] = 1; }
     for (i = 0; i < words.length; i++) {
-      if ((big && big[i] && !/\d{3,}|\d\/\d/.test(words[i])) || (!force[i] && common(words[i])) || /^X{2,}[,.;:]?$/i.test(words[i]) || /^\d{1,2}[,.;:]?$/.test(words[i]) || /^\(?\d{1,2}\)?$/.test(words[i]) && i === 0 || /^\d{1,2}(\.\d{1,2})*\.$/.test(words[i]) || /^\d{1,2}(\.\d{1,2}){1,3}$/.test(words[i]) && /^[A-ZÀ-Ý]/.test(words[i + 1] || '') || /^(https?:\/\/|www\.)|\.(gov|com|org|net|edu)(\.[a-z]{2})?([\/:]|$)/i.test(words[i]) || /^\(\d{1,2}\)$/.test(words[i]) || /^[nN][ºo°]\.?$/.test(words[i])) fixed[i] = 1; }
+      if ((big && big[i] && !/\d{3,}|\d\/\d/.test(words[i])) || (!force[i] && common(words[i])) || /^X{2,}[,.;:]?$/i.test(words[i]) || /^[A-Za-z][,.;:]?$/.test(words[i]) || /^s\/n[,.;]?$/i.test(words[i]) || /^(?=[IVX])X{0,3}(IX|IV|V?I{0,3})[,.;:)]?$/.test(words[i]) || /^\d{1,2}[,.;:]?$/.test(words[i]) || /^\(?\d{1,2}\)?$/.test(words[i]) && i === 0 || /^\d{1,2}(\.\d{1,2})*\.$/.test(words[i]) || /^\d{1,2}(\.\d{1,2}){1,3}$/.test(words[i]) && /^[A-ZÀ-Ý]/.test(words[i + 1] || '') || /^(https?:\/\/|www\.)|\.(gov|com|org|net|edu)(\.[a-z]{2})?([\/:]|$)/i.test(words[i]) || /^\(\d{1,2}\)$/.test(words[i]) || /^[nN][ºo°]\.?$/.test(words[i])) fixed[i] = 1; }
     // países: ficam como estão (até 4 palavras, a mais longa primeiro)
     for (i = 0; i < words.length; i++) for (n = 4; n >= 1; n--) { if (i + n > words.length) continue; var cand = words.slice(i, i + n).map(norm).join(' ').trim();
       if (PAISES[cand]) { for (var q = i; q < i + n; q++) fixed[q] = 1; i += n - 1; break; } }
@@ -2180,7 +2217,7 @@ if (typeof module !== 'undefined') module.exports = createPdf2Docx;
       if (e < words.length && /:$/.test(words[e])) { k = e + 1; continue; } // palavras que fazem parte de um rótulo ("Local Ovação:")
       var run = words.slice(k, e), caps = run.join(' ') === run.join(' ').toUpperCase(), lower = run.join(' ') === run.join(' ').toLowerCase();
       run.forEach(function (rw, q) {
-        if (/[A-Za-zÀ-ÿ][-\/][A-Za-zÀ-ÿ]/.test(rw)) { out[k + q] = rw.split(/([-\/])/).map(function (p) { if (/^[-\/]$/.test(p) || !p || common(p)) return p; var nm2 = nameLike(p.replace(/[^A-Za-zÀ-ÿ]/g, '').length, st, p); return p === p.toUpperCase() ? nm2.toUpperCase() : nm2; }).join(''); return; }
+        if (/[A-Za-zÀ-ÿ][-\/][A-Za-zÀ-ÿ]/.test(rw)) { out[k + q] = rw.split(/([-\/])/).map(function (p) { if (/^[-\/]$/.test(p) || !p || p.length < 2 || common(p)) return p; var nm2 = nameLike(p.replace(/[^A-Za-zÀ-ÿ]/g, '').length, st, p); return p === p.toUpperCase() ? nm2.toUpperCase() : nm2; }).join(''); return; }
         var core = rw.replace(/[^A-Za-zÀ-ÿ]/g, ''), nm = q === 0 && /\b(LTDA|S\.?A\.?)\b/i.test(words.slice(e, e + 2).join(' ')) ? 'Empresa' : nameLike(core.length, st, core);
         var tail = (rw.match(/[^A-Za-zÀ-ÿ0-9]+$/) || [''])[0]; nm += tail; out[k + q] = caps ? nm.toUpperCase() : lower ? nm.toLowerCase() : nm; });
       st.m += run.length; k = e; }
