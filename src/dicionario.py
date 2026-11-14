@@ -1,0 +1,21 @@
+import unicodedata, re, zipfile, io, base64
+from wordfreq import top_n_list
+def norm(w): return re.sub('[^a-z]','',unicodedata.normalize('NFD',w).encode('ascii','ignore').decode().lower())
+NOMES = set(norm(x) for x in """maria ana joão josé antônio francisco carlos paulo pedro lucas luiz luis marcos gabriel rafael daniel marcelo bruno eduardo felipe rodrigo manoel manuel mateus matheus andré fernando fábio leonardo gustavo guilherme leandro tiago thiago anderson ricardo márcio jorge sebastião alexandre roberto edson diego vitor victor sérgio cláudio júlio renato adriano raimundo luciano juliana adriana márcia fernanda patrícia aline sandra camila amanda bruna jéssica letícia júlia luciana vanessa mariana gabriela larissa cláudia beatriz luana sônia renata eliane josefa simone natália cristina carla débora rosângela jaqueline daniela marlene terezinha raimunda andréa andreia fabiana lúcia raquel ângela rafaela joana elaine kelly lucelia luigi rui caio enzo arthur heitor davi bernardo miguel samuel murilo otávio henrique ronaldo rogério wagner wellington wilson valdir valter walter osvaldo geraldo gilberto gilmar nilson nelson silvio sílvia silvana solange tânia tatiana viviane priscila michele michelle karina kátia regina rosana rosemeire roseli sueli marta helena heloísa isabela isabel laura lívia lorena manuela melissa nathalia paula pâmela sabrina stefany thaís valéria yasmin giovana giovanna emanuel emanuele cristiano cristiane douglas everton evandro fabrício flávio flávia gean jean jefferson jonas jonatan juliano junior kleber lauro leonel lourenço marciano mauro maurício moisés nicolas norberto orlando ramon reinaldo robson rubens sandro tadeu ulisses vagner vinícius william willian
+silva santos oliveira souza sousa rodrigues ferreira alves pereira lima gomes costa ribeiro martins carvalho almeida lopes soares fernandes vieira barbosa rocha araújo nascimento mendes barros freitas cardoso moreira cavalcanti azevedo melo moura nunes castro teixeira correia correa pinheiro marques machado monteiro andrade fonseca batista baptista medeiros duarte farias bezerra miranda brito coelho pacheco xavier borges siqueira tavares cunha guimarães rezende resende fagundes queiroz aguiar amaral caldeira camargo domingues esteves figueiredo garcia lacerda magalhães meireles morais moraes nogueira sampaio vasconcelos viana zanella albuquerque campos rosa schmidt schneider müller muller weber becker wagner hoffmann zimmermann kuhn klein fischer meyer santana bittencourt dalla rossi ferrari russo colombo bianchi ricci marino greco romano conti costa gallo mancini fontana moretti
+john james michael david robert william mary smith johnson williams jones miller davis wilson taylor anderson thomas jackson harris clark lewis walker allen wright scott adams nelson carter mitchell roberts turner phillips campbell parker evans edwards collins stewart morris rogers murphy cooper richardson peterson""".split())
+SKIP = set('dias santos franco serra prado torres cruz neves ramos reis matos leite pinto sales assis neto valente vitoria aparecida rita bastos macedo paz luz'.split())
+NOMES -= SKIP
+words=set()
+for lang,n in (('pt',200000),('en',40000),('es',30000)):
+    for w in top_n_list(lang,n):
+        if not re.fullmatch(r"[^\W\d_]+",w): continue
+        x=norm(w)
+        if len(x)>=2 and x not in NOMES: words.add(x)
+extra='vigiagro sigsif dipoa mapa sif csi csn dcpoa poa sisbov siscomex pga lpco cct dta dtc mic mercosul consignor consignee shipper tachamento tachamentos contentor lacracao autocontrole halal datador datadora carimbador lacrado lacrada lacres contentores reefer genset carreta embarcador embarcadora desembaraco desembaracado expedidora rotulagem rotulado rotulada sobrecoxa sobrecoxas meio-asa coxinha dorsal miudos pertences cms carcaca carcacas termografo termografos datalogger embalagem embalagens paletizado paletizada palete paletes pallet pallets mapa dipoa dsa dfia sda uvagro svo vigiagro anuencia anuente psa ppm ppr ppho pac pacs appcc haccp sigsif sei'.split()
+words|=set(extra)
+s='\n'.join(sorted(words))
+b=io.BytesIO(); z=zipfile.ZipFile(b,'w',zipfile.ZIP_DEFLATED,compresslevel=9); z.writestr('d.txt',s); z.close()
+open('dict.b64','w').write(base64.b64encode(b.getvalue()).decode())
+open('nomes.txt','w').write(' '.join(sorted(NOMES)))
+print(len(words), len(s), len(b.getvalue()))
