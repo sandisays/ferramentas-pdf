@@ -508,7 +508,7 @@ function createPdf2Docx(pdfjsLib, JSZip, env) {
         if (p.indLeft < 0.8) p.indLeft = 0;
       } else { p.indLeft = 0; p.firstLine = 0; }
       p.kind = 'p';
-      p.floats = [];
+      p.floats = []; p.areaW = areaR - areaL;
       for (const l of p.lines) for (const f of (l.floats || [])) p.floats.push({ runs: f.items.map((it, k) => ({ text: (k && (it.spB || f.items[k - 1].spA || it.x - (f.items[k - 1].x + f.items[k - 1].w) > 0.13 * it.size) ? ' ' : '') + it.str, fmt: Object.assign(runFmt(it), { sub: false, sup: false, sz: Math.round(it.size * 2) / 2 }) })),
         dx: f.x - areaL, dy: f.top - f0top(p), w: f.items[f.items.length - 1].x + f.items[f.items.length - 1].w - f.x + 1.5, h: f.nat + 0.5, exact: f.nat });
     }
@@ -546,7 +546,26 @@ function createPdf2Docx(pdfjsLib, JSZip, env) {
       ' w:line="' + tw(p.exact) + '" w:lineRule="exact"/>';
     if (p.indLeft || p.firstLine) pr += '<w:ind w:left="' + tw(p.indLeft) + '"' + (p.firstLine > 0.5 ? ' w:firstLine="' + tw(p.firstLine) + '"' : p.firstLine < -0.5 ? ' w:hanging="' + tw(-p.firstLine) + '"' : '') + '/>';
     if (p.align !== 'left') pr += '<w:jc w:val="' + p.align + '"/>';
+    const ti = (p.runs || []).findIndex(r => r.tab);
+    if (p.floats && p.floats.length && !opts.prefix && !opts.pageBreak && p.firstLine < -0.5 && ti > 0 && p.areaW > p.indLeft + 20) return labelTableXml(p, before, after, ti);
     return '<w:p><w:pPr>' + pr + '</w:pPr>' + (opts.prefix || '') + (p.floats || []).map(floatXml).join('') + runsXml(p.runs) + '</w:p>';
+  }
+  // item com rótulo e índices pequenos embaixo dele ("(viii)" e "(3) (4) (5)"): tabela sem bordas de 2 colunas,
+  // tudo como texto normal (sem caixa de texto); a coluna da esquerda tem a largura do recuo do rótulo
+  function labelTableXml(p, before, after, ti) {
+    const hang = -p.firstLine, left = p.indLeft - hang, w1 = tw(hang), w2 = tw(p.areaW - p.indLeft);
+    const sp = (b, a, line) => '<w:spacing w:before="' + Math.max(0, tw(b)) + '" w:after="' + Math.max(0, tw(a || 0)) + '" w:line="' + tw(line) + '" w:lineRule="exact"/>';
+    const fl = p.floats.slice().sort((a, b) => a.dy - b.dy); let y = p.exact, refs = '';
+    for (const f of fl) { refs += '<w:p><w:pPr>' + sp(Math.max(0, f.dy - y), 0, f.exact) + '</w:pPr>' + runsXml(f.runs) + '</w:p>'; y = Math.max(y, f.dy) + f.exact; }
+    const tabs = (p.tabs || []).map(t => t.right ? { right: true, pos: t.pos - p.indLeft } : t - p.indLeft).filter(t => (t.right ? t.pos : t) > 1).slice(1);
+    const tabXml = tabs.length ? '<w:tabs>' + tabs.map(t => t.right ? '<w:tab w:val="right" w:pos="' + tw(t.pos) + '"/>' : '<w:tab w:val="left" w:pos="' + tw(t) + '"/>').join('') + '</w:tabs>' : '';
+    const body = p.runs.slice(ti + 1);
+    return '<w:tbl><w:tblPr><w:tblW w:w="' + (w1 + w2) + '" w:type="dxa"/><w:tblInd w:w="' + tw(left) + '" w:type="dxa"/><w:tblLayout w:type="fixed"/>' +
+      '<w:tblCellMar><w:top w:w="0" w:type="dxa"/><w:left w:w="0" w:type="dxa"/><w:bottom w:w="0" w:type="dxa"/><w:right w:w="0" w:type="dxa"/></w:tblCellMar><w:tblLook w:val="0000"/></w:tblPr>' +
+      '<w:tblGrid><w:gridCol w:w="' + w1 + '"/><w:gridCol w:w="' + w2 + '"/></w:tblGrid><w:tr><w:tc><w:tcPr><w:tcW w:w="' + w1 + '" w:type="dxa"/></w:tcPr>' +
+      '<w:p><w:pPr>' + sp(before, 0, p.exact) + '</w:pPr>' + runsXml(p.runs.slice(0, ti)) + '</w:p>' + refs + '</w:tc>' +
+      '<w:tc><w:tcPr><w:tcW w:w="' + w2 + '" w:type="dxa"/></w:tcPr><w:p><w:pPr>' + tabXml + sp(before, after, p.exact) + (p.align !== 'left' ? '<w:jc w:val="' + p.align + '"/>' : '') + '</w:pPr>' + runsXml(body) + '</w:p></w:tc></w:tr></w:tbl>' +
+      '<w:p><w:pPr><w:spacing w:before="0" w:after="0" w:line="20" w:lineRule="exact"/><w:rPr><w:sz w:val="2"/><w:szCs w:val="2"/></w:rPr></w:pPr></w:p>';
   }
   let floatId = 7000;
   function floatXml(f) {
