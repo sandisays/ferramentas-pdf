@@ -2121,23 +2121,40 @@ if (typeof module !== 'undefined') module.exports = createPdf2Docx;
 
   /* ---- gerador de dados fictícios ---- */
   var NAMES = ['Ana', 'Rui', 'Lima', 'Nome', 'Rosa', 'Silva', 'Souza', 'Costa', 'Campos', 'Pereira', 'Exemplo', 'Oliveira', 'Fernandes', 'Albuquerque'];
-  function nameLike(len, st) { var best = null, bd = 99; for (var q = 0; q < NAMES.length; q++) { var n = NAMES[(q + st.m) % NAMES.length], d = Math.abs(n.length - len) + (st.used[n] ? 3 : 0); if (d < bd) { bd = d; best = n; } } st.used[best] = 1; return best; }
+  function nameLike(len, st, orig) { var best = null, bd = 99; for (var q = 0; q < NAMES.length; q++) { var n = NAMES[(q + st.m) % NAMES.length], d = Math.abs(n.length - len) + (st.used[n] ? 3 : 0) + (orig && n.toUpperCase() === orig.toUpperCase() ? 50 : 0); if (d < bd) { bd = d; best = n; } } st.used[best] = 1; return best; }
+  var PAISES = {}; 'AFEGANISTAO|AFRICA DO SUL|ALBANIA|ALEMANHA|ANDORRA|ANGOLA|ANTIGUA E BARBUDA|ARABIA SAUDITA|ARGELIA|ARGENTINA|ARMENIA|ARUBA|AUSTRALIA|AUSTRIA|AZERBAIJAO|BAHAMAS|BAHREIN|BAREIN|BANGLADESH|BARBADOS|BELGICA|BELIZE|BENIN|BIELORRUSSIA|BOLIVIA|BOSNIA|BOSNIA E HERZEGOVINA|BOTSUANA|BRASIL|BRUNEI|BULGARIA|BURKINA FASO|BURUNDI|BUTAO|CABO VERDE|CAMAROES|CAMBOJA|CANADA|CATAR|QATAR|CAZAQUISTAO|CHADE|CHILE|CHINA|CHIPRE|CINGAPURA|SINGAPURA|COLOMBIA|COMORES|CONGO|COREIA|COREIA DO SUL|COREIA DO NORTE|COSTA DO MARFIM|COSTA RICA|CROACIA|CUBA|CURACAO|DINAMARCA|DJIBUTI|DOMINICA|EGITO|EL SALVADOR|EMIRADOS ARABES|EMIRADOS ARABES UNIDOS|EAU|EQUADOR|ERITREIA|ESLOVAQUIA|ESLOVENIA|ESPANHA|ESTADOS UNIDOS|EUA|ESTONIA|ESSUATINI|ETIOPIA|FIJI|FILIPINAS|FINLANDIA|FRANCA|GABAO|GAMBIA|GANA|GEORGIA|GRANADA|GRECIA|GUATEMALA|GUIANA|GUIANA FRANCESA|GUINE|GUINE BISSAU|GUINE EQUATORIAL|HAITI|HOLANDA|PAISES BAIXOS|HONDURAS|HONG KONG|HUNGRIA|IEMEN|ILHAS MAURICIO|MAURICIO|INDIA|INDONESIA|INGLATERRA|REINO UNIDO|IRA|IRAQUE|IRLANDA|ISLANDIA|ISRAEL|ITALIA|JAMAICA|JAPAO|JORDANIA|KOSOVO|KUWAIT|KWAIT|LAOS|LESOTO|LETONIA|LIBANO|LIBERIA|LIBIA|LIECHTENSTEIN|LITUANIA|LUXEMBURGO|MACAU|MACEDONIA|MACEDONIA DO NORTE|MADAGASCAR|MALASIA|MALAUI|MALDIVAS|MALI|MALTA|MARROCOS|MAURITANIA|MEXICO|MIANMAR|MICRONESIA|MOCAMBIQUE|MOLDAVIA|MONACO|MONGOLIA|MONTENEGRO|NAMIBIA|NEPAL|NICARAGUA|NIGER|NIGERIA|NORUEGA|NOVA CALEDONIA|NOVA ZELANDIA|OMA|PALESTINA|PANAMA|PAPUA NOVA GUINE|PAQUISTAO|PARAGUAI|PERU|POLINESIA FRANCESA|POLONIA|PORTO RICO|PORTUGAL|QUENIA|QUIRGUISTAO|REPUBLICA CHECA|TCHEQUIA|REPUBLICA DOMINICANA|ROMENIA|RUANDA|RUSSIA|SAMOA|SANTA LUCIA|SAO TOME E PRINCIPE|SAO VICENTE E GRANADINAS|SENEGAL|SERRA LEOA|SERVIA|SEICHELES|SIRIA|SOMALIA|SRI LANKA|SUDAO|SUDAO DO SUL|SUECIA|SUICA|SURINAME|TAILANDIA|TAIWAN|TAJIQUISTAO|TANZANIA|TIMOR LESTE|TOGO|TONGA|TRINIDAD E TOBAGO|TUNISIA|TURCOMENISTAO|TURQUIA|UCRANIA|UGANDA|UNIAO EUROPEIA|URUGUAI|UZBEQUISTAO|VANUATU|VATICANO|VENEZUELA|VIETNA|VIETNAME|ZAMBIA|ZIMBABUE'.split('|').forEach(function (p) { PAISES[p] = 1; });
+  var norm = function (w) { return w.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().replace(/[^A-Z ]/g, ''); };
   function fakeTokens(words, st) { // uma palavra fictícia para cada palavra original
-    var out = words.slice(), k = 0;
-    var seq = function (t) { return t.replace(/\d{2}\/\d{2}\/(\d{4}|\d{2})/g, function (m, y) { return '01/01/' + (y.length === 4 ? '2025' : '25'); })
-      .replace(/\d/g, function () { var c = '1234567890'.charAt(st.n % 10); st.n++; return c; }); };
+    var out = words.slice(), k = 0, fixed = {}, i, n;
+    // países: ficam como estão (até 4 palavras, a mais longa primeiro)
+    for (i = 0; i < words.length; i++) for (n = 4; n >= 1; n--) { if (i + n > words.length) continue; var cand = words.slice(i, i + n).map(norm).join(' ').trim();
+      if (PAISES[cand]) { for (var q = i; q < i + n; q++) fixed[q] = 1; i += n - 1; break; } }
+    for (i = 0; i < words.length; i++) { if (fixed[i]) continue; var w0 = words[i], nx = words[i + 1] || '';
+      // contêiner (padrão ISO: 4 letras + 6 números + dígito): sempre CTNR123456-1
+      if (/^[A-Z]{3}[UJZ]\d{6}-?\d[,;.]?$/i.test(w0)) { out[i] = 'CTNR123456-1' + (w0.match(/[,;.]$/) || [''])[0]; fixed[i] = 1; continue; }
+      if (/^[A-Z]{3}[UJZ]$/i.test(w0) && /^\d{6}-?\d[,;.]?$/.test(nx)) { out[i] = 'CTNR'; out[i + 1] = '123456-1' + (nx.match(/[,;.]$/) || [''])[0]; fixed[i] = fixed[i + 1] = 1; i++; continue; }
+      // lacre: número/SIF número, ou número logo depois de um rótulo "Lacre"
+      if (/^\d{3,}\s*\/\s*SIF\s*\d{1,6}[,;.]?$/i.test(w0)) { out[i] = '12345/SIF0000' + (w0.match(/[,;.]$/) || [''])[0]; fixed[i] = 1; continue; }
+      if (/\d/.test(w0) && words.slice(Math.max(0, i - 3), i).some(function (p) { return /^lacres?:?$/i.test(p); }) && !/[A-Za-z]{2}/.test(w0.replace(/SIF/i, ''))) { out[i] = '12345/SIF0000' + (w0.match(/[,;.]$/) || [''])[0]; fixed[i] = 1; continue; }
+    }
+    for (i = 0; i < words.length; i++) if (/[A-Za-zÀ-ÿ.]:$/.test(words[i])) { fixed[i] = 1;
+      for (var b2 = i - 1, cnt = 0; b2 >= 0 && cnt < 4; b2--, cnt++) { var pw = words[b2]; if (fixed[b2] || /:$/.test(pw) || /\d/.test(pw) || !/^[A-Za-zÀ-ÿ.ºª°]+$/.test(pw)) break; fixed[b2] = 1; } }
+    // palavras comuns em minúsculas (de, via, emitido…) ficam; nomes e códigos começam com maiúscula
+    for (i = 0; i < words.length; i++) if (!fixed[i] && /^[a-zà-ÿ][a-zà-ÿ.,;]*$/.test(words[i])) fixed[i] = 1;
+    var seq = function (t) { var dm = t.match(/^(\d{2})\/(\d{2})\/(\d{4}|\d{2})([,;.]?)$/); if (dm) return '01/01/' + (dm[3].length === 4 ? '2025' : '25') + dm[4];
+      return t.replace(/\d/g, function () { var c = '1234567890'.charAt(st.n % 10); st.n++; return c; }); };
     var isLabel = function (w) { return /:$/.test(w) || /^(n[ºo°]|nr\.?|de|da|do|dos|das|e|a|o|em|para|por|com)$/i.test(w); };
     var keep = function (w) { return /^(LTDA|S\.?A\.?|ME|EIRELI|EPP|-|–|\/|\||&)$/i.test(w) || !/[A-Za-zÀ-ÿ0-9]/.test(w); };
     while (k < words.length) { var w = words[k];
-      if (isLabel(w) || keep(w)) { k++; continue; }
+      if (fixed[k] || isLabel(w) || keep(w)) { k++; continue; }
       if (/^[\w.+-]+@[\w-]+(\.[\w-]+)+$/.test(w)) { out[k] = 'nome@exemplo.com'; k++; continue; }
       var L = (w.match(/[A-Za-zÀ-ÿ]/g) || []).length, D = (w.match(/\d/g) || []).length;
       if (D && D >= L) { out[k] = seq(w); k++; continue; }
       // sequência de palavras de letras (nome, empresa, cidade…)
-      var e = k; while (e < words.length && !isLabel(words[e]) && !keep(words[e]) && /[A-Za-zÀ-ÿ]/.test(words[e]) && !((words[e].match(/\d/g) || []).length >= (words[e].match(/[A-Za-zÀ-ÿ]/g) || []).length)) e++;
+      var e = k; while (e < words.length && !fixed[e] && !isLabel(words[e]) && !keep(words[e]) && /[A-Za-zÀ-ÿ]/.test(words[e]) && !((words[e].match(/\d/g) || []).length >= (words[e].match(/[A-Za-zÀ-ÿ]/g) || []).length)) e++;
       if (e < words.length && /:$/.test(words[e])) { k = e + 1; continue; } // palavras que fazem parte de um rótulo ("Local Ovação:")
       var run = words.slice(k, e), caps = run.join(' ') === run.join(' ').toUpperCase(), lower = run.join(' ') === run.join(' ').toLowerCase();
-      run.forEach(function (rw, q) { var core = rw.replace(/[^A-Za-zÀ-ÿ]/g, ''), nm = q === 0 && /\b(LTDA|S\.?A\.?)\b/i.test(words.slice(e, e + 2).join(' ')) ? 'Empresa' : nameLike(core.length, st);
+      run.forEach(function (rw, q) { var core = rw.replace(/[^A-Za-zÀ-ÿ]/g, ''), nm = q === 0 && /\b(LTDA|S\.?A\.?)\b/i.test(words.slice(e, e + 2).join(' ')) ? 'Empresa' : nameLike(core.length, st, core);
         var tail = (rw.match(/[^A-Za-zÀ-ÿ0-9]+$/) || [''])[0]; nm += tail; out[k + q] = caps ? nm.toUpperCase() : lower ? nm.toLowerCase() : nm; });
       st.m += run.length; k = e; }
     return out;
