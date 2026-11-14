@@ -632,10 +632,8 @@ function createPdf2Docx(pdfjsLib, JSZip, env) {
     const bd = (name, v) => v ? '<w:' + name + ' w:val="single" w:sz="' + Math.max(2, Math.round(v * 8)) + '" w:space="0" w:color="000000"/>' : '<w:' + name + ' w:val="nil"/>';
     for (let r = 0; r < t.nr; r++) {
       const rh = t.ys[r + 1] - t.ys[r];
-      // linha pode quebrar entre páginas (se a pessoa preencher mais texto no Word, nada fica cortado);
-      // a primeira linha (cabeçalho) se repete na página seguinte
-      const head = r === 0 && t.nr >= 3 && t.cells.every(g => g.r0 !== 0 || g.r1 === 0);
-      x += '<w:tr><w:trPr><w:trHeight w:val="' + tw(rh) + '" w:hRule="atLeast"/>' + (head ? '<w:tblHeader/>' : '') + '</w:trPr>';
+      // linha pode quebrar entre páginas (se a pessoa preencher mais texto no Word, nada fica cortado)
+      x += '<w:tr><w:trPr><w:trHeight w:val="' + tw(rh) + '" w:hRule="atLeast"/></w:trPr>';
       for (let c = 0; c < t.nc; c++) {
         const g = at[r + ':' + c]; if (!g) continue;
         const span = g.c1 - g.c0 + 1, startRow = r === g.r0;
