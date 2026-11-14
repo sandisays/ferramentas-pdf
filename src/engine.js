@@ -359,7 +359,7 @@ function createPdf2Docx(pdfjsLib, JSZip, env) {
     const sorted = items.slice().sort((a, b) => b.size - a.size || a.y - b.y);
     for (const it of sorted) {
       let best = null;
-      const underLabel = lines.some(A => it.size < 0.85 * A.size && it.y > A.base && it.y - A.base < 1.0 * A.size && Math.abs(it.x - A.items[0].x) < 2.5 && A.items.length > 1);
+      const underLabel = lines.some(A => it.size < 0.85 * A.size && it.y > A.base && it.y - A.base < (A.items.length > 1 ? 1.0 : 1.15) * A.size && Math.abs(it.x - A.items[0].x) < 2.5 && (A.items.length > 1 || /^[(\[]?[0-9IVXLivxl]+(\.[0-9IVXivx]+)*[.)\]]?$/.test(A.items[0].str.trim())));
       if (underLabel) { const own = lines.find(A => A.isIdx && Math.abs(A.base - it.y) < 0.6); if (own) own.items.push(it); else lines.push({ base: it.y, size: it.size, items: [it], isIdx: true }); continue; }
       for (const l of lines) {
         const d = l.base - it.y; // positivo = item acima da linha de base
@@ -390,7 +390,7 @@ function createPdf2Docx(pdfjsLib, JSZip, env) {
       const L = lines[i], prev = lines[i - 1], next = lines[i + 1];
       if (L.size < 0.85 * prev.size && L.base - prev.base < 1.0 * prev.size && next.top < L.bottom - 0.5 && L.x >= prev.x - 2 && L.right < next.x) {
         const lab = prev.items.filter(it => it.x <= L.x + 1).sort((p, q) => q.x - p.x)[0];
-        (prev.floats = prev.floats || []).push({ items: L.items.sort((p, q) => p.x - q.x), base: L.base, top: L.top, x: L.x, nat: L.nat, size: L.dsz, labR: lab ? lab.x + lab.w : null, pbase: prev.base });
+        (prev.floats = prev.floats || []).push({ items: L.items.sort((p, q) => p.x - q.x), base: L.base, top: L.top, x: L.x, nat: L.nat, size: L.dsz, labR: lab ? lab.x + lab.w : null, pbase: prev.base, atEnd: !!lab && lab.x + lab.w >= prev.right - 1 });
         lines.splice(i, 1); i--;
       }
     }
@@ -511,7 +511,7 @@ function createPdf2Docx(pdfjsLib, JSZip, env) {
       p.kind = 'p';
       p.floats = []; p.areaW = areaR - areaL;
       for (const l of p.lines) for (const f of (l.floats || [])) p.floats.push({ runs: f.items.map((it, k) => ({ text: (k && (it.spB || f.items[k - 1].spA || it.x - (f.items[k - 1].x + f.items[k - 1].w) > 0.13 * it.size) ? ' ' : '') + it.str, fmt: Object.assign(runFmt(it), { sub: false, sup: false, sz: Math.round(it.size * 2) / 2 }) })),
-        dx: f.x - areaL, dy: f.top - f0top(p), labR: f.labR == null ? null : f.labR - areaL, drop: f.base - f.pbase, w: f.items[f.items.length - 1].x + f.items[f.items.length - 1].w - f.x + 1.5, h: f.nat + 0.5, exact: f.nat });
+        dx: f.x - areaL, dy: f.top - f0top(p), labR: f.labR == null ? null : f.labR - areaL, drop: f.base - f.pbase, atEnd: f.atEnd && p.lines.length === 1, w: f.items[f.items.length - 1].x + f.items[f.items.length - 1].w - f.x + 1.5, h: f.nat + 0.5, exact: f.nat });
     }
     for (let i = 1; i < paras.length; i++) { const p = paras[i], prev = paras[i - 1]; if (p.lines.length > 1) continue;
       const f = p.lines[0], d = f.base - prev.lines[prev.lines.length - 1].base;
@@ -541,8 +541,10 @@ function createPdf2Docx(pdfjsLib, JSZip, env) {
   function paraXml(p, before, after, opts) {
     opts = opts || {};
     // índices pequenos embaixo do rótulo ("(viii)" e "(3) (4) (5)"): viram texto normal logo depois do rótulo, um pouco rebaixado
-    const ti0 = (p.runs || []).findIndex(r => r.tab);
-    if (p.floats && p.floats.length && ti0 > 0 && p.firstLine < -0.5 && p.floats.every(f => f.labR != null)) {
+    let ti0 = (p.runs || []).findIndex(r => r.tab);
+    const whole = p.floats && p.floats.length && ti0 < 0 && p.floats.every(f => f.atEnd); // o rótulo é a linha inteira ("II.5")
+    if (whole) ti0 = p.runs.length;
+    if (p.floats && p.floats.length && ti0 > 0 && (whole || p.firstLine < -0.5) && p.floats.every(f => f.labR != null)) {
       const runs = p.runs.slice(); let end = Math.max(...p.floats.map(f => f.labR)), ins = [];
       for (const f of p.floats) { ins.push({ text: ' ', fmt: Object.assign({}, f.runs[0].fmt, { sub: true, sz: Math.round(f.runs[0].fmt.sz / 0.65 * 2) / 2 }) });
         f.runs.forEach(r => ins.push({ text: r.text, fmt: Object.assign({}, r.fmt, { sub: true, sz: Math.round(r.fmt.sz / 0.65 * 2) / 2 }) })); end += f.w + 1; }
@@ -550,7 +552,7 @@ function createPdf2Docx(pdfjsLib, JSZip, env) {
       const tab0 = p.tabs && p.tabs.length ? (p.tabs[0].right ? null : p.tabs[0]) : p.indLeft;
       const need = end + 2 - (tab0 == null ? p.indLeft : tab0);
       p = Object.assign({}, p, { runs, floats: [] });
-      if (need > 0) { p.indLeft += need; p.firstLine -= need; if (p.tabs && p.tabs.length && !p.tabs[0].right) p.tabs = [p.tabs[0] + need].concat(p.tabs.slice(1)); }
+      if (need > 0 && !whole) { p.indLeft += need; p.firstLine -= need; if (p.tabs && p.tabs.length && !p.tabs[0].right) p.tabs = [p.tabs[0] + need].concat(p.tabs.slice(1)); }
     }
     let pr = '';
     if (opts.pageBreak) pr += '<w:pageBreakBefore/>';
