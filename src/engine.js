@@ -337,7 +337,9 @@ function createPdf2Docx(pdfjsLib, JSZip, env) {
       for (const l of lines) {
         const d = l.base - it.y; // positivo = item acima da linha de base
         const ok = Math.abs(d) < 0.12 * l.size + 0.6 || (it.size < 0.85 * l.size && d > -0.35 * l.size && d < 0.75 * l.size);
-        if (ok && (!best || Math.abs(d) < Math.abs(best.base - it.y))) best = l;
+        const cost = ll => Math.abs(ll.base - it.y);
+        if (ok && it.size < 0.85 * l.size && it.x + it.w < Math.min(...l.items.map(q => q.x)) - 1.5 * l.size) continue; // índice pequeno sob um rótulo de outra linha
+        if (ok && (!best || cost(l) < cost(best))) best = l;
       }
       if (best) best.items.push(it); else lines.push({ base: it.y, size: it.size, items: [it] });
     }
@@ -355,6 +357,18 @@ function createPdf2Docx(pdfjsLib, JSZip, env) {
       l.top = l.base - l.font.asc * l.dsz; l.bottom = l.base + l.font.dsc * l.dsz; l.nat = (l.font.asc + l.font.dsc) * l.dsz;
     }
     lines.sort((a, b) => a.base - b.base || a.x - b.x);
+    // índice pequeno (ex.: (3)(4) sob o rótulo) que se sobrepõe à linha seguinte: vira subscrito da linha de cima
+    for (let i = 1; i + 1 < lines.length; i++) {
+      const L = lines[i], prev = lines[i - 1], next = lines[i + 1];
+      if (L.size < 0.85 * prev.size && L.base - prev.base < 1.0 * prev.size && next.top < L.bottom - 0.5 && L.x >= prev.x - 2 && L.right < next.x) {
+        let endX = prev.items[0].x + prev.items[0].w; // fim do rótulo (antes do primeiro espaço grande)
+        for (let k = 1; k < prev.items.length; k++) { const g = prev.items[k].x - (prev.items[k - 1].x + prev.items[k - 1].w); if (g > Math.max(1.8 * prev.items[k - 1].font.spw * prev.size, 3.5)) break; endX = prev.items[k].x + prev.items[k].w; }
+        const nextX = (prev.items.find(q => q.x > endX + 0.5) || { x: Infinity }).x, totW = L.items.reduce((t, q) => t + q.w, 0);
+        const fit = Math.min(1, (nextX - endX - 5) / totW); // não pode empurrar o texto depois da tabulação
+        let cx = endX + 0.05; for (const it of L.items.sort((p, q) => p.x - q.x)) { it.sub = true; it.sup = false; it.spB = false; it.x = cx; if (fit < 1) { it.size *= Math.max(0.6, fit); it.w *= Math.max(0.6, fit); } cx += it.w + 0.05; }
+        prev.items = prev.items.concat(L.items).sort((p, q) => p.x - q.x); lines.splice(i, 1); i--;
+      }
+    }
     for (let i = 0; i < lines.length; i++) for (let j = i + 1; j < lines.length; j++) {
       const A = lines[i], B = lines[j]; if (B.base - A.base >= 0.75 * Math.max(A.size, B.size)) break;
       if (Math.abs(A.size - B.size) > 0.2 * A.size) continue;
@@ -380,7 +394,7 @@ function createPdf2Docx(pdfjsLib, JSZip, env) {
         const gap = it.x - (prev.x + prev.w);
         if (!justified && !it.glue && gap > Math.max(1.8 * prev.font.spw * l.size, 3.5) && !(it.sup || prev.sup)) {
           const lastChunk = !l.items.slice(l.items.indexOf(it) + 1).some((n2, q, arr) => n2.x - ((q ? arr[q - 1] : it).x + (q ? arr[q - 1] : it).w) > Math.max(1.8 * it.font.spw * l.size, 3.5) && !n2.glue);
-          if (lastChunk && l.right - areaL > 0.75 * (areaR - areaL)) tabs.push({ pos: Math.min(l.right, areaR) - areaL, right: true }); else tabs.push(it.x - areaL);
+          if (lastChunk && l.right - areaL > 0.75 * (areaR - areaL) && l.right - it.x < 0.35 * (areaR - areaL)) tabs.push({ pos: Math.min(l.right, areaR) - areaL, right: true }); else tabs.push(it.x - areaL);
           const tf = runFmt(prev); tf.field = null; tf.u = false; tf.strike = false; runs.push({ tab: true, fmt: tf });
         } else if (!(it.raw && it.glue) && (gap > 0.13 * Math.min(it.size, prev.size) || prev.spA || it.spB)) {
           const f = (prev.sup || prev.sub) ? fmt : runFmt(prev); f.u = prev.u && it.u; f.strike = prev.strike && it.strike; f.field = null;
@@ -393,6 +407,8 @@ function createPdf2Docx(pdfjsLib, JSZip, env) {
   }
 
   const docState = { compressed: 0, stretched: 0 };
+  const tabXs = l => { const out = []; for (let i = 1; i < l.items.length; i++) { const p = l.items[i - 1], it = l.items[i];
+      if (!it.glue && !it.sup && !p.sup && it.x - (p.x + p.w) > Math.max(1.8 * p.font.spw * l.size, 3.5)) out.push(it.x); } return out; };
   function natW(l) {
     if (!env.measure) return null; let w = 0;
     for (const it of l.items) { const m = env.measure(it.str, it.font, it.size); if (m == null) return null; w += m; }
@@ -403,7 +419,8 @@ function createPdf2Docx(pdfjsLib, JSZip, env) {
     const paras = []; const mid = (areaL + areaR) / 2;
     for (const l of lines) {
       const leftGap = l.x - areaL, rightGap = areaR - l.right;
-      l.align = (Math.abs((l.x + l.right) / 2 - mid) <= 1.6 && leftGap > 2.5) ? 'center' : (Math.abs(rightGap) <= 1.6 && leftGap > 6 ? 'right' : 'left');
+      l.tx = tabXs(l);
+      l.align = l.tx.length ? 'left' : (Math.abs((l.x + l.right) / 2 - mid) <= 1.6 && leftGap > 2.5) ? 'center' : (Math.abs(rightGap) <= 1.6 && leftGap > 6 ? 'right' : 'left');
       l.multiWord = l.items.length > 1 || /\s/.test(l.items[0].str);
       if (env.measure && l.right - l.x > 0.6 * (areaR - areaL)) { const nw = natW(l);
         if (nw != null) { const d = nw - (l.right - l.x); if (d > Math.max(1, 0.004 * nw)) { docState.compressed++; if (env.debug) console.log("COMP", d.toFixed(2), nw.toFixed(1), l.items.map(i => i.str + "[" + i.w.toFixed(1) + "/" + (env.measure(i.str, i.font, i.size) || 0).toFixed(1) + "]").join(" ").slice(0, 300)); } else if (d < -Math.max(2, 0.01 * nw)) docState.stretched++; } }
@@ -424,9 +441,10 @@ function createPdf2Docx(pdfjsLib, JSZip, env) {
         const sameSize = Math.abs(l.size - q.size) < 0.7;
         const pitchOk = pitch > 0.6 * l.nat && pitch < 1.7 * l.nat && (p.lines.length < 2 || Math.abs(pitch - p.pitch) < 0.8);
         let alignOk = l.align === q.align;
-        if (alignOk && l.align === 'left') alignOk = p.lines.length < 2 ? l.x <= q.x + 40 : Math.abs(l.x - p.lines[1].x) < 1.6;
+        const hang = p.lines.length < 2 && q.tx.length && Math.abs(l.x - q.tx[q.tx.length - 1]) < 1.6; // continuação alinhada ao texto depois do rótulo
+        if (alignOk && l.align === 'left') alignOk = p.lines.length < 2 ? (hang || (l.x <= q.x + 40 && q.x - l.x < 0.3 * (areaR - areaL))) : Math.abs(l.x - p.lines[1].x) < 1.6;
         if (p.lines.length === 1 && q.align !== l.align && q.right >= areaR - 1.6 && l.align === 'left') alignOk = true; // 1ª linha justificada
-        const hasTab = q.items.some((it, i) => i > 0 && !it.glue && it.x - (q.items[i - 1].x + q.items[i - 1].w) > 3 * q.size);
+        const hasTab = !hang && q.items.some((it, i) => i > 0 && !it.glue && it.x - (q.items[i - 1].x + q.items[i - 1].w) > 3 * q.size);
         if (wrapped && sameSize && pitchOk && alignOk && !hasTab && (l.multiWord || q.multiWord)) {
           p.lines.push(l); p.pitch = pitch; merged = true; l.softBreak = softBreak;
           if (q.align === 'left' && !softBreak && !q.stretched) { const f1 = env.measure ? env.measure(first.str.split(/\s/)[0], first.font, first.size) : null; l.fitAt = q.right + 0.22 * l.size + (f1 != null ? f1 : fw); }
@@ -783,7 +801,11 @@ function createPdf2Docx(pdfjsLib, JSZip, env) {
     ctx.compat = docState.compressed > docState.stretched * 0.2 && docState.compressed > 0 ? 15 : (env.measure ? 14 : 15);
     let breakNext = false;
     pages.forEach((pg, pi) => {
-      const elems = pg.elems;
+      const elems = pg.elems, last = elems[elems.length - 1];
+      if (last && last.kind === 'p' && pages[pi + 1] && !pages[pi + 1].noBreak) {
+        const slack = (pg.H - marBot) - last.bottom;
+        if (slack < 4) { const cut = Math.min(4 - slack, 0.2 * last.exact * last.lines.length); last.exact = Math.round((last.exact - cut / last.lines.length) * 20) / 20; last.bottom = last.top + last.exact * last.lines.length; }
+      }
       if (pg.noBreak) breakNext = false;
       let prefix = '';
       for (const pic of pg.pics) { const id = relId++; media.push({ name: 'image' + id + '.' + pic.ext, data: pic.data });
