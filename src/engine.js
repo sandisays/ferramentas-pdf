@@ -882,7 +882,7 @@ function createPdf2Docx(pdfjsLib, JSZip, env) {
     if (!merges) marBot = hf.f ? Math.max(0, P0.H - P0.foot[0].top) : Math.max(0, Math.min(isFinite(Bdist) ? Bdist - 4 : 28, 28));
     // 3) XML
     ctx.compat = docState.compressed > docState.stretched * 0.2 && docState.compressed > 0 ? 15 : (env.measure ? 14 : 15);
-    let breakNext = false;
+    let breakNext = false; const over = [];
     pages.forEach((pg, pi) => {
       const elems = pg.elems, last = elems[elems.length - 1];
       if (last && last.kind === 'p' && pages[pi + 1] && !pages[pi + 1].noBreak) {
@@ -899,7 +899,7 @@ function createPdf2Docx(pdfjsLib, JSZip, env) {
       let pre = '';
       if (prefix) { pre = spacerXml(1, { pageBreak: breakNext, prefix }); }
       const fl = flowXml(elems, pg.start + (prefix ? 1 : 0), ctx, { pageBreak: breakNext && !prefix });
-      body += pre + fl.xml;
+      body += pre + fl.xml; if (!pages[pi + 1] || !pages[pi + 1].noBreak) { if (fl.end > pg.H - marBot + 2) over.push(pi + 1); }
       if (!pre && !fl.xml && !pg.noBreak) body += spacerXml(1, { pageBreak: breakNext });
       if (sizeChange) { body += spacerXml(1, { sect: sectPr(pg, false) }); breakNext = false; }
       else { breakNext = !!next; if (!next && fl.endsWithTable) body += spacerXml(1); }
@@ -927,11 +927,24 @@ function createPdf2Docx(pdfjsLib, JSZip, env) {
     if (hf.h) zf('word/header1.xml', hfPart(P0.head, 'hdr', headTop));
     if (hf.f) zf('word/footer1.xml', hfPart(P0.foot, 'ftr', P0.foot[0].top));
     for (const m of media) zf('word/media/' + m.name, m.data);
+    // conferência: todo o texto do PDF está no Word? (compara sem espaços, cabeçalho e rodapé contam uma vez)
+    const chk = (() => {
+      const wt = xml => (xml.match(/<w:t(?: [^>]*)?>[^<]*<\/w:t>/g) || []).map(s => s.replace(/<[^>]+>/g, '')).join('');
+      const un = s => s.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&amp;/g, '&');
+      const squash = s => un(s).normalize('NFC').replace(/\s+/g, '');
+      const docTxt = squash(wt(body) + (hf.h ? wt(hfPart(P0.head, 'hdr', headTop)) : '') + (hf.f ? wt(hfPart(P0.foot, 'ftr', P0.foot[0].top)) : ''));
+      let total = 0, miss = 0; const missing = [];
+      pages.forEach((pg, pi) => { const skip = new Set(pi ? pg.head.concat(pg.foot).flatMap(l => l.items) : []);
+        for (const it of pg.items) { if (skip.has(it)) continue;
+          for (const w of String(it.str || '').normalize('NFC').split(/\s+/)) { if (w.length < 2 || /^\d$/.test(w)) continue; total += w.length;
+            if (docTxt.indexOf(w) < 0) { miss += w.length; if (missing.length < 6 && missing.indexOf(w) < 0) missing.push(w); } } } });
+      return { text: total ? Math.max(0, 1 - miss / total) : 1, missing, overflow: over };
+    })();
     prog(0.95, 'Compactando');
     const out = await zip.generateAsync({ type: 'uint8array', compression: 'DEFLATE', mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
     try { await doc.destroy(); } catch (e) {}
     prog(1, 'Pronto');
-    return { data: out, pages: N, tables: nTables, images: nImages, scanned, ocrPages, ocrErr: ocrErr ? String(ocrErr.message || ocrErr) : null };
+    return { data: out, pages: N, tables: nTables, images: nImages, scanned, ocrPages, check: chk, ocrErr: ocrErr ? String(ocrErr.message || ocrErr) : null };
   }
   return { convert };
 }

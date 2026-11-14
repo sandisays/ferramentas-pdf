@@ -76,6 +76,21 @@
   .credit span { color:var(--acc); }
   .credit .sep { color:var(--mute); margin:0 6px; font-weight:400; }
   #privLink { background:none; border:0; padding:0; font:inherit; font-weight:600; color:var(--acc); cursor:pointer; text-decoration:underline; text-underline-offset:3px; }
+  #cmpDlg { width:calc(100% - 24px); max-width:1500px; height:calc(100% - 24px); max-height:none; border:1px solid var(--line); border-radius:16px; background:var(--card); color:var(--ink); padding:0; box-shadow:var(--shadow); }
+  #cmpDlg[open] { display:flex; flex-direction:column; }
+  #cmpDlg::backdrop { background:rgba(20,14,12,.55); }
+  .cmphd { display:flex; align-items:center; gap:12px; padding:12px 16px; border-bottom:1px solid var(--line); flex-wrap:wrap; }
+  .cmphd h2 { font-size:16px; margin:0; flex:1; min-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .cmphd .lg { font-size:13px; color:var(--mute); }
+  .cmpgrid { flex:1; display:grid; grid-template-columns:1fr 1fr; min-height:0; }
+  .cmpcol { overflow:auto; background:#8a817d; padding:14px; min-height:0; }
+  .cmpcol + .cmpcol { border-left:2px solid var(--line); }
+  .cmpcap { position:sticky; top:-14px; z-index:2; margin:-14px -14px 12px; padding:6px 14px; background:var(--card); color:var(--ink); font-weight:600; font-size:13px; border-bottom:1px solid var(--line); }
+  .cmppage { display:block; margin:0 auto 14px; background:#fff; box-shadow:0 2px 10px rgba(0,0,0,.35); max-width:100%; height:auto; }
+  #cmpDoc .docx-wrapper { background:transparent !important; padding:0 !important; }
+  #cmpDoc section.docx > header, #cmpDoc section.docx > footer { display:block !important; }
+  #cmpDoc .docx-wrapper > section.docx { margin:0 auto 14px !important; box-shadow:0 2px 10px rgba(0,0,0,.35) !important; color:#000; }
+  @media (max-width:800px) { .cmpgrid { grid-template-columns:1fr; grid-template-rows:1fr 1fr; } .cmpcol + .cmpcol { border-left:0; border-top:2px solid var(--line); } }
   #privDlg { max-width:560px; width:calc(100% - 32px); border:1px solid var(--line); border-radius:16px; background:var(--card); color:var(--ink); padding:22px 24px; box-shadow:var(--shadow); text-align:left; }
   #privDlg::backdrop { background:rgba(20,14,12,.45); }
   #privDlg h2 { font-family:'Fredoka','Trebuchet MS',system-ui,sans-serif; font-size:22px; margin:0 0 4px; }
@@ -342,6 +357,10 @@
     Arquivo único: guarde este .html no computador ou pen drive e abra com dois cliques (Chrome, Edge ou Firefox).
     <div class="credit">Desenvolvido por <span>Sandi :)</span><span class="sep">·</span><button type="button" id="privLink">Política de privacidade</button></div>
   </footer>
+  <dialog id="cmpDlg" aria-labelledby="cmpTitle">
+    <div class="cmphd"><h2 id="cmpTitle">Comparar</h2><span class="lg" id="cmpInfo">PDF original à esquerda, Word convertido à direita. As duas colunas rolam juntas.</span><button type="button" class="btn ghost" id="cmpClose">Fechar</button></div>
+    <div class="cmpgrid"><div class="cmpcol" id="cmpPdf"><div class="cmpcap">PDF original</div></div><div class="cmpcol" id="cmpDoc"><div class="cmpcap">Word convertido (prévia aproximada: confira o final no Word)</div><div id="cmpDocBody"></div></div></div>
+  </dialog>
   <dialog id="privDlg" aria-labelledby="privTitle">
     <button type="button" class="btn ghost x" id="privClose">Fechar</button>
     <h2 id="privTitle">Política de privacidade</h2>
@@ -371,6 +390,7 @@
 <script>/*__PDFJS__*/</script>
 <script type="text/plain" id="pdfworker">/*__WORKER__*/</script>
 <script>/*__JSZIP__*/</script>
+<script>/*__DOCXPREV__*/</script>
 <script>/*__PDFLIB__*/</script>
 <script>/*__TESS__*/</script>
 <script type="text/plain" id="ocr-worker">/*__TESSWORKER__*/</script>
@@ -533,6 +553,46 @@
     });
     $('actions').hidden = !list.children.length; run();
   }
+  // comparar: PDF (pdf.js) e Word (prévia do .docx) lado a lado, rolando juntos
+  var cmpTok = 0;
+  async function compare(f, data) {
+    var d = $('cmpDlg'), pc = $('cmpPdf'), dc = $('cmpDocBody'), tok = ++cmpTok;
+    $('cmpTitle').textContent = f.name; while (pc.children.length > 1) pc.removeChild(pc.lastChild); dc.innerHTML = '';
+    var wait = document.createElement('p'); wait.textContent = 'Montando a prévia…'; wait.style.color = '#fff'; dc.appendChild(wait);
+    if (d.showModal) d.showModal(); else d.setAttribute('open', '');
+    try {
+      var pdf = await pdfjsLib.getDocument({ data: new Uint8Array(await f.arrayBuffer()), isEvalSupported: false }).promise;
+      for (var i = 1; i <= pdf.numPages && tok === cmpTok; i++) { var pg = await pdf.getPage(i), vp = pg.getViewport({ scale: 1.6 }), c = document.createElement('canvas');
+        c.width = vp.width; c.height = vp.height; c.className = 'cmppage'; c.style.width = (vp.width / 1.6) + 'pt';
+        await pg.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise; pc.appendChild(c); }
+      pdf.destroy();
+    } catch (e) { var er = document.createElement('p'); er.textContent = 'Não foi possível mostrar o PDF.'; pc.appendChild(er); }
+    try {
+      if (!window.docx || !docx.renderAsync) throw new Error('prévia indisponível');
+      // a prévia não entende "quebra de página antes do parágrafo" nem bordas diagonais: prepara uma cópia só para mostrar
+      var z = await JSZip.loadAsync(data), xml = await z.file('word/document.xml').async('string'), diag = [];
+      xml = xml.replace(/<w:p><w:pPr><w:pageBreakBefore\/>/g, '<w:p><w:r><w:br w:type="page"/></w:r></w:p><w:p><w:pPr>');
+      (xml.match(/<w:tc>.*?<\/w:tcPr>/g) || []).forEach(function (s) { diag.push(/<w:tl2br /.test(s) ? 'tl' : /<w:tr2bl /.test(s) ? 'tr' : ''); });
+      z.file('word/document.xml', xml); var prev = await z.generateAsync({ type: 'blob' });
+      await docx.renderAsync(prev, dc, null, { inWrapper: true, breakPages: true, ignoreLastRenderedPageBreak: true, renderHeaders: true, renderFooters: true, useBase64URL: true, experimental: true, className: 'docx' });
+      if (wait.parentNode) wait.remove();
+      var tds = dc.querySelectorAll('td'); if (tds.length === diag.length) Array.prototype.forEach.call(tds, function (td, k) {
+        if (!diag[k]) return; var ln = diag[k] === 'tl' ? 'x1="0" y1="0" x2="100" y2="100"' : 'x1="0" y1="100" x2="100" y2="0"';
+        td.style.backgroundImage = 'url("data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><line ' + ln + ' stroke="black" stroke-width="1" vector-effect="non-scaling-stroke"/></svg>') + '")';
+        td.style.backgroundSize = '100% 100%'; td.style.backgroundRepeat = 'no-repeat'; });
+      fitCmp();
+    } catch (e) { dc.innerHTML = ''; var er2 = document.createElement('p'); er2.style.color = '#fff'; er2.textContent = 'Não foi possível montar a prévia do Word. O arquivo baixado continua normal.'; dc.appendChild(er2); }
+  }
+  function fitCmp() { // ajusta as duas colunas para a mesma largura de página
+    var pc = $('cmpPdf'), dc = $('cmpDocBody'), w = pc.clientWidth - 28;
+    Array.prototype.forEach.call(pc.querySelectorAll('canvas'), function (c) { c.style.width = Math.min(w, c.width / 1.6 * 96 / 72) + 'px'; });
+    var sec = dc.querySelector('section.docx'); if (!sec) return; var sw = sec.offsetWidth || 1, z = Math.min(1, ($('cmpDoc').clientWidth - 28) / sw);
+    var wr = dc.querySelector('.docx-wrapper'); if (wr) wr.style.zoom = z; }
+  (function () { var d = $('cmpDlg'), a = $('cmpPdf'), b = $('cmpDoc'), lock = 0;
+    $('cmpClose').onclick = function () { cmpTok++; if (d.close) d.close(); else d.removeAttribute('open'); $('cmpDocBody').innerHTML = ''; };
+    var sync = function (src, dst) { return function () { if (lock && lock !== src) return; lock = src; var m = src.scrollHeight - src.clientHeight, n = dst.scrollHeight - dst.clientHeight;
+      dst.scrollTop = m > 0 ? src.scrollTop / m * n : 0; clearTimeout(sync.t); sync.t = setTimeout(function () { lock = 0; }, 80); }; };
+    a.addEventListener('scroll', sync(a, b)); b.addEventListener('scroll', sync(b, a)); window.addEventListener('resize', function () { if (d.open) fitCmp(); }); })();
   async function run() {
     if (busy) return; busy = true;
     while (queue.length) {
@@ -540,16 +600,23 @@
       try {
         var buf = new Uint8Array(await j.f.arrayBuffer());
         var r = await engine.convert(buf, { ocr: $('ocrOn').checked, onProgress: (function (j) { return function (p, msg) { j.bar.firstChild.style.width = Math.round(p * 100) + '%'; j.st.textContent = msg; }; })(j) });
+        window.__lastCheck = r.check;
         var out = j.f.name.replace(/\.pdf$/i, '') + '.docx';
         results.push({ name: out, data: r.data });
         var b = document.createElement('button'); b.className = 'btn'; b.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12"/><path d="m7 11 5 5 5-5"/><path d="M5 20h14"/></svg>Baixar .docx';
         b.onclick = (function (n, d) { return function () { save(n, d); }; })(out, r.data);
+        var cb = document.createElement('button'); cb.className = 'btn ghost'; cb.textContent = 'Comparar'; cb.title = 'Ver o PDF e o Word lado a lado antes de baixar';
+        cb.onclick = (function (f, d) { return function () { compare(f, d); }; })(j.f, r.data); j.slot.appendChild(cb);
         j.slot.appendChild(b); j.bar.hidden = true; j.li.classList.add('done');
         var parts = [r.pages + (r.pages > 1 ? ' páginas' : ' página'), r.tables + (r.tables === 1 ? ' tabela' : ' tabelas')];
         if (r.images) parts.push(r.images + (r.images === 1 ? ' imagem' : ' imagens'));
         j.st.textContent = 'Pronto: ' + parts.join(', ') + '.'; j.st.className = 'st ok';
         if (r.ocrPages) { j.st.textContent += ' ' + r.ocrPages + (r.ocrPages > 1 ? ' páginas escaneadas tiveram o texto reconhecido (OCR): confira o texto.' : ' página escaneada teve o texto reconhecido (OCR): confira o texto.'); j.st.className = 'st warn'; }
         if (r.ocrErr) { j.st.textContent += ' O OCR falhou: ' + r.ocrErr; j.st.className = 'st warn'; }
+        var ck = r.check; if (ck) { var okText = ck.text >= 0.999;
+          j.st.textContent += okText ? ' Conferido: todo o texto do PDF está no Word.' : ' Conferência: ' + (Math.floor(ck.text * 1000) / 10).toString().replace('.', ',') + '% do texto encontrado no Word' + (ck.missing.length ? ' (faltando, por exemplo: ' + ck.missing.join(', ') + ')' : '') + '.';
+          if (ck.overflow.length) j.st.textContent += ' ' + (ck.overflow.length > 1 ? 'As páginas ' + ck.overflow.join(', ') + ' podem' : 'A página ' + ck.overflow[0] + ' pode') + ' passar do tamanho e empurrar texto para a página seguinte.';
+          if (!okText || ck.overflow.length) { j.st.className = 'st warn'; j.st.textContent += ' Use Comparar para conferir.'; } }
         if (r.scanned) { j.st.textContent += ' ' + r.scanned + (r.scanned > 1 ? ' páginas escaneadas entraram' : ' página escaneada entrou') + ' como imagem (sem texto editável).'; j.st.className = 'st warn'; }
       } catch (e) {
         j.bar.hidden = true; j.st.className = 'st err'; j.li.classList.add('bad');
