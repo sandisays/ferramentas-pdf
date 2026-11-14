@@ -334,10 +334,13 @@ function createPdf2Docx(pdfjsLib, JSZip, env) {
     const sorted = items.slice().sort((a, b) => b.size - a.size || a.y - b.y);
     for (const it of sorted) {
       let best = null;
+      const underLabel = lines.some(A => it.size < 0.85 * A.size && it.y > A.base && it.y - A.base < 1.0 * A.size && Math.abs(it.x - A.items[0].x) < 2.5 && A.items.length > 1);
+      if (underLabel) { const own = lines.find(A => A.isIdx && Math.abs(A.base - it.y) < 0.6); if (own) own.items.push(it); else lines.push({ base: it.y, size: it.size, items: [it], isIdx: true }); continue; }
       for (const l of lines) {
         const d = l.base - it.y; // positivo = item acima da linha de base
         const ok = Math.abs(d) < 0.12 * l.size + 0.6 || (it.size < 0.85 * l.size && d > -0.35 * l.size && d < 0.75 * l.size);
         const cost = ll => Math.abs(ll.base - it.y);
+        if (!l.big) l.big = l.size; 
         if (ok && it.size < 0.85 * l.size && it.x + it.w < Math.min(...l.items.map(q => q.x)) - 1.5 * l.size) continue; // índice pequeno sob um rótulo de outra linha
         if (ok && (!best || cost(l) < cost(best))) best = l;
       }
@@ -361,12 +364,8 @@ function createPdf2Docx(pdfjsLib, JSZip, env) {
     for (let i = 1; i + 1 < lines.length; i++) {
       const L = lines[i], prev = lines[i - 1], next = lines[i + 1];
       if (L.size < 0.85 * prev.size && L.base - prev.base < 1.0 * prev.size && next.top < L.bottom - 0.5 && L.x >= prev.x - 2 && L.right < next.x) {
-        let endX = prev.items[0].x + prev.items[0].w; // fim do rótulo (antes do primeiro espaço grande)
-        for (let k = 1; k < prev.items.length; k++) { const g = prev.items[k].x - (prev.items[k - 1].x + prev.items[k - 1].w); if (g > Math.max(1.8 * prev.items[k - 1].font.spw * prev.size, 3.5)) break; endX = prev.items[k].x + prev.items[k].w; }
-        const nextX = (prev.items.find(q => q.x > endX + 0.5) || { x: Infinity }).x, totW = L.items.reduce((t, q) => t + q.w, 0);
-        const fit = Math.min(1, (nextX - endX - 5) / totW); // não pode empurrar o texto depois da tabulação
-        let cx = endX + 0.05; for (const it of L.items.sort((p, q) => p.x - q.x)) { it.sub = true; it.sup = false; it.spB = false; it.x = cx; if (fit < 1) { it.size *= Math.max(0.6, fit); it.w *= Math.max(0.6, fit); } cx += it.w + 0.05; }
-        prev.items = prev.items.concat(L.items).sort((p, q) => p.x - q.x); lines.splice(i, 1); i--;
+        (prev.floats = prev.floats || []).push({ items: L.items.sort((p, q) => p.x - q.x), base: L.base, top: L.top, x: L.x, nat: L.nat, size: L.dsz });
+        lines.splice(i, 1); i--;
       }
     }
     for (let i = 0; i < lines.length; i++) for (let j = i + 1; j < lines.length; j++) {
@@ -415,6 +414,7 @@ function createPdf2Docx(pdfjsLib, JSZip, env) {
     for (let i = 1; i < l.items.length; i++) { const g = Math.max(0, l.items[i].x - l.items[i - 1].x - l.items[i - 1].w); w += (g > Math.max(1.8 * l.items[i - 1].font.spw * l.size, 3.5) && !l.items[i].glue) ? g : Math.min(0.25 * l.size, g); }
     return w;
   }
+  const f0top = p => p.lines[0].base + p.lines[0].font.dsc * p.lines[0].dsz - p.exact;
   function buildParagraphs(lines, areaL, areaR, isCell) {
     const paras = []; const mid = (areaL + areaR) / 2;
     for (const l of lines) {
@@ -440,6 +440,8 @@ function createPdf2Docx(pdfjsLib, JSZip, env) {
         }
         const sameSize = Math.abs(l.size - q.size) < 0.7;
         const pitchOk = pitch > 0.6 * l.nat && pitch < 1.7 * l.nat && (p.lines.length < 2 || Math.abs(pitch - p.pitch) < 0.8);
+        { const cx0 = p.lines.length > 1 ? p.lines[1].x : (q.tx && q.tx.length ? q.tx[q.tx.length - 1] : null); // linha cheia na coluna de continuação = justificada, não "à direita"
+          if (cx0 != null && l.align !== 'left' && Math.abs(l.x - cx0) < 1.6 && Math.abs(areaR - l.right) < 2) l.align = 'left'; }
         let alignOk = l.align === q.align;
         const hang = p.lines.length < 2 && q.tx.length && Math.abs(l.x - q.tx[q.tx.length - 1]) < 1.6; // continuação alinhada ao texto depois do rótulo
         if (alignOk && l.align === 'left') alignOk = p.lines.length < 2 ? (hang || (l.x <= q.x + 40 && q.x - l.x < 0.3 * (areaR - areaL))) : Math.abs(l.x - p.lines[1].x) < 1.6;
@@ -481,6 +483,9 @@ function createPdf2Docx(pdfjsLib, JSZip, env) {
         if (p.indLeft < 0.8) p.indLeft = 0;
       } else { p.indLeft = 0; p.firstLine = 0; }
       p.kind = 'p';
+      p.floats = [];
+      for (const l of p.lines) for (const f of (l.floats || [])) p.floats.push({ runs: f.items.map((it, k) => ({ text: (k && (it.spB || f.items[k - 1].spA || it.x - (f.items[k - 1].x + f.items[k - 1].w) > 0.13 * it.size) ? ' ' : '') + it.str, fmt: Object.assign(runFmt(it), { sub: false, sup: false, sz: Math.round(it.size * 2) / 2 }) })),
+        dx: f.x - areaL, dy: f.top - f0top(p), w: f.items[f.items.length - 1].x + f.items[f.items.length - 1].w - f.x + 1.5, h: f.nat + 0.5, exact: f.nat });
     }
     for (let i = 1; i < paras.length; i++) { const p = paras[i], prev = paras[i - 1]; if (p.lines.length > 1) continue;
       const f = p.lines[0], d = f.base - prev.lines[prev.lines.length - 1].base;
@@ -516,7 +521,17 @@ function createPdf2Docx(pdfjsLib, JSZip, env) {
       ' w:line="' + tw(p.exact) + '" w:lineRule="exact"/>';
     if (p.indLeft || p.firstLine) pr += '<w:ind w:left="' + tw(p.indLeft) + '"' + (p.firstLine > 0.5 ? ' w:firstLine="' + tw(p.firstLine) + '"' : p.firstLine < -0.5 ? ' w:hanging="' + tw(-p.firstLine) + '"' : '') + '/>';
     if (p.align !== 'left') pr += '<w:jc w:val="' + p.align + '"/>';
-    return '<w:p><w:pPr>' + pr + '</w:pPr>' + (opts.prefix || '') + runsXml(p.runs) + '</w:p>';
+    return '<w:p><w:pPr>' + pr + '</w:pPr>' + (opts.prefix || '') + (p.floats || []).map(floatXml).join('') + runsXml(p.runs) + '</w:p>';
+  }
+  let floatId = 7000;
+  function floatXml(f) {
+    const id = floatId++, cx = emu(f.w), cy = emu(f.h);
+    return '<w:r><w:drawing><wp:anchor distT="0" distB="0" distL="0" distR="0" simplePos="0" relativeHeight="' + (251700000 + id) + '" behindDoc="0" locked="0" layoutInCell="1" allowOverlap="1">' +
+      '<wp:simplePos x="0" y="0"/><wp:positionH relativeFrom="column"><wp:posOffset>' + emu(f.dx) + '</wp:posOffset></wp:positionH><wp:positionV relativeFrom="line"><wp:posOffset>' + emu(f.dy) + '</wp:posOffset></wp:positionV>' +
+      '<wp:extent cx="' + cx + '" cy="' + cy + '"/><wp:effectExtent l="0" t="0" r="0" b="0"/><wp:wrapNone/><wp:docPr id="' + id + '" name="Indice ' + id + '"/><wp:cNvGraphicFramePr/>' +
+      '<a:graphic><a:graphicData uri="http://schemas.microsoft.com/office/word/2010/wordprocessingShape"><wps:wsp><wps:cNvSpPr txBox="1"/><wps:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="' + cx + '" cy="' + cy + '"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:noFill/><a:ln><a:noFill/></a:ln></wps:spPr>' +
+      '<wps:txbx><w:txbxContent><w:p><w:pPr><w:spacing w:before="0" w:after="0" w:line="' + tw(f.exact) + '" w:lineRule="exact"/></w:pPr>' + runsXml(f.runs) + '</w:p></w:txbxContent></wps:txbx>' +
+      '<wps:bodyPr rot="0" wrap="none" lIns="0" tIns="0" rIns="0" bIns="0" anchor="t" anchorCtr="0"><a:noAutofit/></wps:bodyPr></wps:wsp></a:graphicData></a:graphic></wp:anchor></w:drawing></w:r>';
   }
   function spacerXml(h, opts) {
     opts = opts || {}; h = Math.max(1, h);
@@ -688,7 +703,7 @@ function createPdf2Docx(pdfjsLib, JSZip, env) {
   async function convert(data, opts) {
     opts = opts || {}; const prog = opts.onProgress || (() => {});
     for (const k in fontCache) delete fontCache[k];
-    docState.compressed = 0; docState.stretched = 0;
+    docState.compressed = 0; docState.stretched = 0; floatId = 7000;
     const doc = await pdfjsLib.getDocument(Object.assign({ data, useSystemFonts: true, isEvalSupported: false }, env.docParams || {})).promise;
     const N = doc.numPages, pages = [];
     const media = [], rels = []; let scanned = 0, nTables = 0, nImages = 0;
@@ -752,7 +767,7 @@ function createPdf2Docx(pdfjsLib, JSZip, env) {
     const ctx = { areaL: L, areaR };
     // corpo
     let body = '', relId = 10;
-    const NS = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"';
+    const NS = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture" xmlns:wps="http://schemas.microsoft.com/office/word/2010/wordprocessingShape"';
     const anchorXml = (pic, id) => {
       const cx = emu(pic.x1 - pic.x0), cy = emu(pic.y1 - pic.y0);
       return '<w:r><w:drawing><wp:anchor distT="0" distB="0" distL="0" distR="0" simplePos="0" relativeHeight="' + (pic.behind ? 1 : 251650000 + id) + '" behindDoc="' + (pic.behind ? 1 : 0) + '" locked="0" layoutInCell="1" allowOverlap="1">' +
