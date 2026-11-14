@@ -632,7 +632,10 @@ function createPdf2Docx(pdfjsLib, JSZip, env) {
     const bd = (name, v) => v ? '<w:' + name + ' w:val="single" w:sz="' + Math.max(2, Math.round(v * 8)) + '" w:space="0" w:color="000000"/>' : '<w:' + name + ' w:val="nil"/>';
     for (let r = 0; r < t.nr; r++) {
       const rh = t.ys[r + 1] - t.ys[r];
-      x += '<w:tr><w:trPr><w:cantSplit/><w:trHeight w:val="' + tw(rh) + '" w:hRule="atLeast"/></w:trPr>';
+      // linha pode quebrar entre páginas (se a pessoa preencher mais texto no Word, nada fica cortado);
+      // a primeira linha (cabeçalho) se repete na página seguinte
+      const head = r === 0 && t.nr >= 3 && t.cells.every(g => g.r0 !== 0 || g.r1 === 0);
+      x += '<w:tr><w:trPr><w:trHeight w:val="' + tw(rh) + '" w:hRule="atLeast"/>' + (head ? '<w:tblHeader/>' : '') + '</w:trPr>';
       for (let c = 0; c < t.nc; c++) {
         const g = at[r + ':' + c]; if (!g) continue;
         const span = g.c1 - g.c0 + 1, startRow = r === g.r0;
@@ -821,7 +824,7 @@ function createPdf2Docx(pdfjsLib, JSZip, env) {
         if (hi > areaR + 1) areaR = (sym > areaR && sym < hi - 0.5) ? sym : areaR + (hi - areaR) * 0.5; } }
     const marR = minW - areaR;
     let headTop = 0, marTop = Math.max(0, T), footBot = 0, marBot;
-    if (hf.h) { headTop = Math.max(0, P0.head[0].top); marTop = Math.max(marTop, 0); }
+    if (hf.h) { headTop = Math.max(0, P0.head[0].top); marTop = Math.max(marTop, P0.head[P0.head.length - 1].bottom + 2); } // corpo nunca começa em cima do cabeçalho
     if (hf.f) { const fl = P0.foot; footBot = Math.max(0, P0.H - fl[fl.length - 1].bottom); marBot = Math.max(0, P0.H - fl[0].top); }
     else marBot = 0;
     const Bdist = Math.min(...pages.map(p => { let b = 0; for (const l of p.mid) b = Math.max(b, l.bottom); for (const t of p.tables) b = Math.max(b, t.y1 + 1); return b ? p.H - b : Infinity; }));
