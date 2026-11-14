@@ -262,7 +262,7 @@
     <div class="opts">
       <label class="opt"><input type="radio" name="spm" value="n" checked><span><b>A cada <input type="number" id="spN" value="1" min="1" style="width:64px"> páginas</b><small>Ex.: 1 = uma página por arquivo.</small></span></label>
       <label class="opt"><input type="radio" name="spm" value="r"><span><b>Por intervalos</b><small>Cada intervalo vira um arquivo. Ex.: <code>1-3, 4-10, 11-</code></small><span class="formrow"><input type="text" id="spR" placeholder="1-3, 4-10, 11-"></span></span></label>
-      <label class="opt"><input type="radio" name="spm" value="s"><span><b>Por tamanho máximo: <input type="number" id="spS" value="5" min="0.2" step="0.5" style="width:70px"> MB</b><small>Divide em partes que caibam no limite (ex.: 5 MB do DCPOA), sem mudar a qualidade.</small></span></label>
+      <label class="opt"><input type="radio" name="spm" value="s"><span><b>Por tamanho máximo: <input type="number" id="spS" value="5" min="0.2" step="0.5" style="width:70px"> MB</b><small>Divide em partes que caibam no limite (ex.: 5 MB), sem mudar a qualidade.</small></span></label>
     </div>
     <button class="btn bigbtn" id="go_split" disabled>Dividir</button>
     <div id="res_split"></div>
@@ -318,12 +318,12 @@
     <b class="t"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>Antes de usar, saiba que</b>
     <ul>
       <li><b>Quantidade:</b> não há limite fixo de arquivos. Eles entram numa fila e são convertidos um de cada vez.</li>
-      <li><b>OCR:</b> leva alguns segundos por página (mais no Citrix) e pode errar letras; sempre confira o texto reconhecido.</li>
+      <li><b>OCR:</b> leva alguns segundos por página (mais em computador lento ou acesso remoto) e pode errar letras; sempre confira o texto reconhecido.</li>
       <li><b>Tamanho:</b> o limite é a memória do seu computador. PDFs muito grandes (acima de uns 100 MB ou centenas de páginas) podem demorar ou travar a aba; nesse caso, divida o PDF.</li>
       <li><b>Baixar todos:</b> o navegador baixa um arquivo por vez e pode pedir permissão para downloads múltiplos na primeira vez.</li>
       <li><b>Nada fica salvo:</b> ao fechar ou recarregar a aba, os convertidos somem. Baixe antes de sair.</li>
       <li><b>Sempre confira</b> o resultado (o .docx no Word, o PDF juntado ou comprimido no leitor de PDF) antes de usar em documento oficial.</li>
-      <li><b>PDF com senha</b> ou protegido não é aceito. Dica: abra o PDF no navegador ou no leitor de PDF, aperte <b>Ctrl+P</b> e escolha <b>Salvar como PDF</b> (ou <b>Microsoft Print to PDF</b>). Isso gera um PDF novo, sem senha.</li>
+      <li><b>PDF com senha</b> ou protegido não é aceito. Dica: abra o PDF no navegador ou no leitor de PDF, aperte <b>Ctrl+P</b> e escolha <b>Salvar como PDF</b> (ou a impressora <b>Print to PDF</b>). Isso gera um PDF novo, sem senha.</li>
       <li><b>Tarja:</b> só a página marcada vira imagem (o texto escondido some de verdade); confira o resultado antes de enviar.</li>
     </ul>
   </div>
@@ -335,12 +335,12 @@
       <li><b>Privacidade:</b> a conversão acontece dentro desta página. O arquivo não é enviado, salvo nem guardado; ao fechar a aba, some tudo. A página bloqueia tecnicamente qualquer conexão de rede.</li>
       <li><b>PDF escaneado</b> (foto ou digitalização): com o OCR ligado, o texto é reconhecido e vira editável; confira, porque o OCR pode errar letras, principalmente em digitalizações ruins, carimbos e manuscritos. Com o OCR desligado, a página entra como imagem.</li>
       <li><b>Pode precisar de ajuste manual:</b> tabelas sem bordas, texto em várias colunas, caixas de texto giradas, gráficos vetoriais e formulários preenchíveis.</li>
-      <li><b>PDF com senha</b> não é convertido. Dica: abra no navegador ou leitor de PDF, aperte <b>Ctrl+P</b> e escolha <b>Salvar como PDF</b> (ou <b>Microsoft Print to PDF</b>) para gerar uma cópia sem senha.</li>
+      <li><b>PDF com senha</b> não é convertido. Dica: abra no navegador ou leitor de PDF, aperte <b>Ctrl+P</b> e escolha <b>Salvar como PDF</b> (ou a impressora <b>Print to PDF</b>) para gerar uma cópia sem senha.</li>
     </ul>
   </details>
   <footer>
     Arquivo único: guarde este .html no computador ou pen drive e abra com dois cliques (Chrome, Edge ou Firefox).
-    <div class="credit">Desenvolvido por <span>Sandi</span><span class="sep">·</span><button type="button" id="privLink">Política de privacidade</button></div>
+    <div class="credit">Desenvolvido por <span>Sandi :)</span><span class="sep">·</span><button type="button" id="privLink">Política de privacidade</button></div>
   </footer>
   <dialog id="privDlg" aria-labelledby="privTitle">
     <button type="button" class="btn ghost x" id="privClose">Fechar</button>
@@ -364,7 +364,7 @@
     <p>Nas páginas alteradas, o conteúdo original é apagado de verdade (a página vira imagem) e os dados do arquivo, como título e autor, são removidos. Confira sempre o resultado antes de enviar.</p>
     <h3>LGPD</h3>
     <p>Como nenhum dado pessoal é coletado ou guardado por esta ferramenta, não há tratamento de dados por parte dela. Quem usa continua responsável pelos documentos que abre e compartilha, conforme as regras da sua empresa.</p>
-    <p class="small">Se esta página for hospedada em um site (por exemplo, GitHub Pages), o provedor do site pode registrar o acesso à página, como qualquer site. Os arquivos que você abre continuam sem sair do computador.</p>
+    <p class="small">Se esta página for hospedada em um site (por exemplo, um site interno), o provedor do site pode registrar o acesso à página, como qualquer site. Os arquivos que você abre continuam sem sair do computador.</p>
   </dialog>
 </main>
 
@@ -553,7 +553,7 @@
         if (r.scanned) { j.st.textContent += ' ' + r.scanned + (r.scanned > 1 ? ' páginas escaneadas entraram' : ' página escaneada entrou') + ' como imagem (sem texto editável).'; j.st.className = 'st warn'; }
       } catch (e) {
         j.bar.hidden = true; j.st.className = 'st err'; j.li.classList.add('bad');
-        j.st.textContent = e && e.name === 'PasswordException' ? 'Este PDF tem senha. Dica: abra o PDF no navegador ou no leitor de PDF, aperte Ctrl+P e escolha Salvar como PDF (ou Microsoft Print to PDF). Isso gera um PDF novo, sem senha, que funciona aqui.' :
+        j.st.textContent = e && e.name === 'PasswordException' ? 'Este PDF tem senha. Dica: abra o PDF no navegador ou no leitor de PDF, aperte Ctrl+P e escolha Salvar como PDF (ou a impressora Print to PDF). Isso gera um PDF novo, sem senha, que funciona aqui.' :
           e && e.name === 'InvalidPDFException' ? 'O arquivo está corrompido ou não é um PDF válido.' : 'Não foi possível converter: ' + (e && e.message ? e.message : e);
       }
     }
@@ -602,7 +602,7 @@
   function kb(n) { return n < 1024 * 1024 ? Math.max(1, Math.round(n / 1024)) + ' KB' : (n / 1048576).toFixed(n < 10485760 ? 1 : 0).replace('.', ',') + ' MB'; }
   function isPdf(f) { return /\.pdf$/i.test(f.name) || f.type === 'application/pdf'; }
   function errMsg(e) { var m = String(e && e.message || e);
-    return /encrypt|password/i.test(m) || (e && e.name === 'PasswordException') ? 'Este PDF tem senha ou proteção. Dica: abra o PDF no navegador ou no leitor de PDF, aperte Ctrl+P e escolha Salvar como PDF (ou Microsoft Print to PDF). Isso gera um PDF novo, sem senha, que funciona aqui.' : /Failed to parse|No PDF header|Invalid PDF/i.test(m) ? 'O arquivo está corrompido ou não é um PDF válido.' : 'Não foi possível processar: ' + m; }
+    return /encrypt|password/i.test(m) || (e && e.name === 'PasswordException') ? 'Este PDF tem senha ou proteção. Dica: abra o PDF no navegador ou no leitor de PDF, aperte Ctrl+P e escolha Salvar como PDF (ou a impressora Print to PDF). Isso gera um PDF novo, sem senha, que funciona aqui.' : /Failed to parse|No PDF header|Invalid PDF/i.test(m) ? 'O arquivo está corrompido ou não é um PDF válido.' : 'Não foi possível processar: ' + m; }
   function el(tag, cls, html) { var e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
   function wire(dropId, inputId, fn) { var d = $(dropId), f = $(inputId);
     d.onclick = function () { f.click(); };
@@ -909,13 +909,15 @@
     JSZip.loadAsync(el.textContent.trim(), { base64: true }).then(function (z) { return z.file('d.txt').async('string'); }).then(function (s) { var d = new Set(s.toUpperCase().split('\n')); DIC = d; el.textContent = ''; }).catch(function () {}); })();
   var MESES = /^(janeiro|fevereiro|mar[cç]o|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro|january|february|march|april|may|june|july|august|september|october|november|december)$/i;
   var COMUNS = {}; 'A ABATE ABATEDOURO ACORDO ADDITIONAL ADDRESS ADICIONAIS ADICIONAL ADICIONAR AGROINDUSTRIAL AGROPECUARIO ALIMENTO ALIMENTOS ANALISE ANALISES AND ANEXO ANEXOS ANIMAIS ANIMAL ANNEX AO AOS APLICA APLICAVEL APOS APPROVAL APROV ARE ARMAZENAMENTO AS ASA ASAS ASININO ASSINATURA AT ATE ATENCAO AUDITOR AV AVE AVENIDA AVES BAIRRO BATCH BE BEEF BLOQ BOVINA BOVINO BOVINOS BRUTO BY CADA CAIXA CAIXAS CANCELADO CAPA CAPRINO CARGA CARGAS CARGO CARIMBO CARNE CARNEO CARNEOS CARNES CARREGAMENTO CEP CERTIFICACAO CERTIFICADO CERTIFICADOS CERTIFICATE CHICKEN CHILLED CIDADE CLIENTE CODIGO COM COMERCIO COMMODITY COMO CONFIRMA CONFORME CONFORMIDADE CONGELADA CONGELADAS CONGELADO CONGELADOS CONSERVACAO CONSIGNATARIO CONSIGNEE CONSIGNOR CONSULTAR CONSUMO CONSUMPTION CONTAINER CONTAINERS CONTEINER CONTEINERES CONTRATO CORTE CORTES COUNTRY COXA COXAS CQ CSI CSN DA DADOS DAS DATA DATAS DATE DCPOA DE DECLARACAO DECLARAMOS DECLARO DESCRIPTION DESEMBARQUE DESTINATARIO DESTINATION DESTINO DETALHES DIPOA DISTRITO DO DOCUMENTO DOCUMENTOS DOS DT DTA DUPLICAR E EM EMBALAGEM EMBALAGENS EMBARQUE EMBASAMENTO EMISSAO EMITIDA EMITIDO EMITIDOS EMPRESA EMPRESAS ENDERECO ENTRE EQUINO ESPECIE ESPECIES ESPECIFICO ESPECIFICOS ESSA ESSE ESTA ESTABELECIMENTO ESTABELECIMENTOS ESTABLISHMENT ESTADO ESTE ESTIMADO EXPIRY EXPORT EXPORTACAO EXPORTADOR EXPORTADORA EXPORTER FABRICACAO FATURA FEDERAL FILE FILEZINHO FILIAL FILTRO FINALIDADE FINS FISCAL FOR FRANGO FRANGOS FRIGORIFICO FROM FROZEN GALINHA GER GERACAO GERADO GERAL GERAR GROSS GUARANTEES HABILITACAO HABILITADO HALAL HAS HAVE HEALTH HUMAN HUMANO IDENTIFICATION IMPORTACAO IMPORTADOR IMPORTADORA IMPORTER IN INDUSTRIA INFORMACAO INFORMACOES INFORMAR INSPECAO INTEIRO INTEIROS INTERNACIONAL IS ISSUED ITEM ITENS JUSTIFICATIVA KG KGS KM LABORATORIAIS LABORATORIAL LABORATORIO LACRE LACRES LAUDO LAUDOS LEGENDA LIBERATORIAS LIBERATORIO LIMPAR LINHA LIQUIDO LISTA LOADING LOCAL LOG LOT LOTE LOTES LPCO MAIS MANTER MAPA MEANS MEAT MECANICAMENTE MEDICO MEIO MENOS MERCADORIA MERCADORIAS MIUDOS MODELO MODELOS MUNICIPIO N NA NACIONAL NAME NAO NAS NATURA NATURE NAVIO NECESSITA NET NFE NO NOME NOMES NOS NOT NOTA NR NUM NUMBER NUMERO NUMEROS O OBS OBSERVACAO OBSERVACOES OF OFFICIAL ON ONDE ORIENTACOES ORIGEM ORIGIN OS OSSO OU OUTRO OUTROS OVACAO OVINO PACKAGES PACKAGING PAGINA PAIS PAISES PARA PART PATAS PEDIDO PEITO PELA PELAS PELE PELO PELOS PERU PES PESO PLACE PLANT POR PORK PORT PORTO POULTRY PRAZO PRETENDIDO PROCEDENCIA PROCESSO PRODUCAO PRODUCT PRODUCTION PRODUCTS PRODUTO PRODUTOS PRODUZIDO PRODUZIDOS PROPRIA PROPRIO QUAIS QUAL QUANDO QUANTIDADE QUANTITY QUE RECEBIDOS REF REFERENCE REFERENCIA REGISTRO RELATORIO RELATORIOS REMETENTE REQUISITOS RESFRIADO RESFRIADOS RESPALDO RESPONSAVEIS RESPONSAVEL RESULTADO RESULTADOS RODOVIA RT RUA RURAL SALGADO SALGADOS SALMONELLA SANITARIA SANITARIO SANITARIOS SANITARY SE SEAL SECTION SEGUNDO SEM SEPARADA SERVICO SEU SEUS SIE SIF SIGNATURE SIGSIF SIM SISBI SIT SITUACAO SLAUGHTER SOB SOBRE SOBRECOXA SOLICITACAO SPECIES SPP STAMP STORAGE SUA SUAS SUBSTITUIDO SUBTOTAL SUINA SUINO SUINOS TABELA TECNICA TECNICO TEMP TEMPERADO TEMPERADOS TEMPERATURA TEMPERATURE TERCEIROS THE TIPO TIPOS TO TODAS TODO TODOS TON TOTAL TRANSITO TRANSPORT TRANSPORTE TREATMENT TYPE UF UM UMA UNIDADE UNIDADES UNITS USUARIO UTILIZADO VALIDADE VALOR VESSEL VETERINARIA VETERINARIAN VETERINARIO VETERINARY VIA VOLUME VOLUMES WEIGHT WITH YES ZONA INDUSTRIAL COMERCIAL CENTRO NORTE SUL LESTE OESTE JARDIM VILA PARQUE SETOR LOTEAMENTO QUADRA SALA ANDAR BLOCO SN BR CRMV CRM CREA CPF CNPJ RG IE INSCRICAO ESTADUAL AC AL AP AM BA CE DF ES GO MA MT MS MG PA PB PR PE PI RJ RN RS RO RR SC SP SE TO LTDA ME EPP EIRELI SA'.split(' ').forEach(function (p) { COMUNS[p] = 1; });
-  function fakeTokens(words, st, big, lac) { // uma palavra fictícia para cada palavra original
+  function fakeTokens(words, st, big, lac, cont) { // uma palavra fictícia para cada palavra original
     var out = words.slice(), k = 0, fixed = {}, i, n;
     // primeira versão: só as respostas mudam; títulos, tópicos e palavras de formulário ficam
     var common = function (w) { if (/\d/.test(w)) return false; var ps = w.split(/[-\/]/).map(function (p) { return norm(p).replace(/ /g, ''); }).filter(Boolean); return ps.length > 0 && ps.every(function (p) { return COMUNS[p] || PAISES[p] || (DIC && DIC.has(p)); }); };
     var force = {}; // depois de "Nome:" vem o nome de uma pessoa, mesmo que seja palavra comum (Rosa, Lima…)
     for (i = 0; i < words.length; i++) if (/^(nome|name|respons[aá]vel|declarante|assinado por):?$/i.test(words[i]) && /:$/.test(words[i]))
       for (n = i + 1; n < words.length && n <= i + 6 && !/:$/.test(words[n]); n++) force[n] = 1;
+    // nome que continua na linha de baixo ("DOS SANTOS"): só se a linha tiver poucas palavras, todas em maiúscula
+    if (cont != null) { var rest = words.slice(cont); if (rest.length && rest.length <= 4 && rest.every(function (w) { return !/:$/.test(w) && !/\d/.test(w) && w === w.toUpperCase() && /[A-ZÀ-Ý]/.test(w); })) for (n = cont; n < words.length; n++) force[n] = 1; }
     // empresa: a primeira palavra antes de LTDA/S.A. vira "Empresa"
     for (i = 1; i < words.length; i++) if (/^(LTDA|S\.?A|EIRELI|EPP)\.?[,;]?$/i.test(words[i])) { var j = i - 1;
       while (j > 0 && i - j < 4 && /^[A-Za-zÀ-ÿ&]+$/.test(words[j - 1]) && !/:$/.test(words[j - 1]) && words[j - 1] === words[j - 1].toUpperCase() === (words[j] === words[j].toUpperCase())) j--;
@@ -963,6 +965,7 @@
         var core = rw.replace(/[^A-Za-zÀ-ÿ]/g, ''), nm = q === 0 && /\b(LTDA|S\.?A\.?)\b/i.test(words.slice(e, e + 2).join(' ')) ? 'Empresa' : nameLike(core.length, st, core);
         var tail = (rw.match(/[^A-Za-zÀ-ÿ0-9]+$/) || [''])[0]; nm += tail; out[k + q] = caps ? nm.toUpperCase() : lower ? nm.toLowerCase() : nm; });
       st.m += run.length; k = e; }
+    st.forceEnd = !!force[words.length - 1];
     return out;
   }
   function suggest(lines, med) { var st = { n: 0, m: 0, used: {} }, prev = [], lacCols = [];
@@ -972,7 +975,7 @@
       var lac = l.words.map(function (w) { return lacCols.some(function (c) { return w.x + w.w / 2 >= c[0] && w.x < c[1]; }); }); lacCols = [];
       l.words.forEach(function (w, i) { if (!/^lacres?:?$/i.test(w.str)) return; var s = i > 0 && /^\d{1,2}(\.\d{1,2})*\.?$/.test(l.words[i - 1].str) ? l.words[i - 1].x : w.x, e = 1;
         for (var j = i + 1; j < l.words.length; j++) if (/^\d{1,2}(\.\d{1,2})+\.?$/.test(l.words[j].str)) { e = l.words[j].x; break; } lacCols.push([s - 0.005, e]); });
-      var r = fakeTokens(prev.concat(ws), st, prev.map(function () { return false; }).concat(big), prev.map(function () { return false; }).concat(lac)).slice(prev.length); prev = ws.slice(-3); return r.join(' '); }).join('\n'); }
+      var r = fakeTokens(prev.concat(ws), st, prev.map(function () { return false; }).concat(big), prev.map(function () { return false; }).concat(lac), st.forceEnd ? prev.length : null).slice(prev.length); prev = ws.slice(-3); return r.join(' '); }).join('\n'); }
 
   /* ---- leitura do texto dentro da área ---- */
   function famOf(n) { n = (n || '').toLowerCase(); return /times|roman|serif|georgia|garamond|cambria/.test(n) && !/sans/.test(n) ? 'Times New Roman' : /courier|mono|consol/.test(n) ? 'Courier New' : /calibri|carlito/.test(n) ? 'Calibri' : /verdana/.test(n) ? 'Verdana' : 'Arial'; }
@@ -1081,10 +1084,16 @@
         x.font = fontOf(null, s0); x.fillStyle = ink0; lines.forEach(function (t, i) { if (t) fitText(t, r[0] + 2, r[1] + s0 * (1.05 + 1.2 * i), r[2] - 4); }); return; }
       lines.forEach(function (t, i) { var L = src[Math.min(i, src.length - 1)], toks = t.trim() ? t.trim().split(/\s+/) : [], ws = L.words || [];
         if (i < src.length && toks.length === ws.length && ws.length) { // palavra por palavra, no lugar de cada uma
-          ws.forEach(function (w, q) { if (toks[q] === w.str) return; var size = L.size * Hh, wx = w.x * W, ww = w.w * W, wb = w.base * Hh;
-            var box = [wx - 1, wb - size * 0.92, ww + 2, size * 1.2], bg = bgColor(x, box), ink = inkColor(x, box);
-            var nx = ws[q + 1] ? ws[q + 1].x * W : r[0] + r[2]; x.fillStyle = bg; x.fillRect(box[0], box[1], box[2], box[3]);
-            x.font = fontOf(w, size); x.fillStyle = ink; x.textBaseline = 'alphabetic'; fitText(toks[q], wx, wb, Math.max(ww, nx - wx - size * 0.25)); });
+          // cada trecho de palavras trocadas seguidas é coberto de uma vez (inclui os espaços entre elas, sem sobrar pedaço do original)
+          var szOf = function (w) { return Math.max(w.size || 0, L.size * 0.5) * Hh; };
+          for (var a = 0; a < ws.length; a++) { if (toks[a] === ws[a].str) continue; var e = a; while (e + 1 < ws.length && toks[e + 1] !== ws[e + 1].str) e++;
+            var top = 1e9, bot = -1e9, bx0 = ws[a].x * W - 1.5, wl = ws[e], bx1 = ws[e + 1] ? ws[e + 1].x * W - 1 : Math.min(r[0] + r[2], (wl.x + wl.w) * W + szOf(wl) * 0.5);
+            for (var q = a; q <= e; q++) { var sq = szOf(ws[q]), bq = ws[q].base * Hh; top = Math.min(top, bq - sq * 1.02); bot = Math.max(bot, bq + sq * 0.3); }
+            var box = [bx0, top, Math.max(bx1, (wl.x + wl.w) * W + 1.5) - bx0, bot - top], bg = bgColor(x, box), ink = inkColor(x, box);
+            x.fillStyle = bg; x.fillRect(box[0], box[1], box[2], box[3]);
+            for (q = a; q <= e; q++) { var w = ws[q], size = szOf(w), wx = w.x * W, nx = ws[q + 1] ? ws[q + 1].x * W : r[0] + r[2];
+              x.font = fontOf(w, size); x.fillStyle = ink; x.textBaseline = 'alphabetic'; fitText(toks[q], wx, w.base * Hh, Math.max(w.w * W, nx - wx - size * 0.25)); }
+            a = e; }
           return; }
         // texto com outra quantidade de palavras: cobre a linha lida e escreve do começo dela
         var size2 = L.size * Hh, lx0 = (ws.length ? ws[0].x : L.x) * W, lx1 = ws.length ? (ws[ws.length - 1].x + ws[ws.length - 1].w) * W : r[0] + r[2], b2 = (i < src.length ? L.base * Hh : src[src.length - 1].base * Hh + (i - src.length + 1) * size2 * 1.15);
