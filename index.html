@@ -95,6 +95,9 @@
   .flist li[draggable="true"] { cursor:grab; }
   .result { margin-top:14px; border-radius:14px; padding:14px 16px; background:var(--okbg); color:var(--ok); display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; font-weight:600; }
   .result.warn { background:var(--prbg); color:var(--pr); } .result.err { background:var(--errbg); color:var(--err); }
+  .tgt { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:12px; font-size:14px; padding:10px 14px; border:1px dashed var(--line); border-radius:12px; }
+  .tgt input[type=number] { width:70px; font:inherit; padding:4px 8px; border:1px solid var(--line); border-radius:8px; background:var(--soft); color:var(--ink); }
+  .tgt input[type=checkbox] { accent-color:var(--fill); width:16px; height:16px; } .tgt small { color:var(--mute); }
   .note { font-size:13px; color:var(--mute); margin:12px 2px 0; }
   [hidden] { display:none !important; }
   @media (max-width:520px) { .tabs button span.lg { display:none; }  main { padding-top:24px; } h1 { font-size:24px; } .panel { padding:14px; } .flist li { grid-template-columns:1fr; } .logo { width:46px; height:46px; } }
@@ -164,6 +167,7 @@
       <label class="opt"><input type="radio" name="lvl" value="normal" checked><span><b>Normal (recomendado)</b><small>Reduz as imagens dentro do PDF e mantém o texto selecionável e pesquisável. Ajuda muito em PDFs escaneados ou com fotos; em PDF só de texto o ganho é pequeno.</small></span></label>
       <label class="opt"><input type="radio" name="lvl" value="forte"><span><b>Forte</b><small>Transforma cada página em imagem. Reduz bastante, mas o texto deixa de ser selecionável e pesquisável. Não use em documento que precise de texto editável ou assinatura digital.</small></span></label>
     </div>
+    <label class="tgt"><input type="checkbox" id="tgtOn" checked> Tentar deixar com no máximo <input type="number" id="tgtMB" value="5" min="0.2" step="0.5"> MB <small>(ex.: limite do DCPOA)</small></label>
     <div class="row" id="actionsC" hidden><h2>Arquivos</h2><div><button class="btn ghost" id="clearC">Limpar</button><button class="btn" id="allC">Baixar todos</button></div></div>
     <ul id="listC" class="flist"></ul>
   </section>
@@ -1168,12 +1172,12 @@ if (typeof module !== 'undefined') module.exports = createPdf2Docx;
     var data = await canvasBytes(c, 'image/png'); c.width = c.height = 0;
     return data ? { data: data, ext: 'png' } : null;
   }
-  async function renderPage(page, scale) {
+  async function renderPage(page, scale, q) {
     var vp = page.getViewport({ scale: scale }), c = document.createElement('canvas');
     c.width = Math.ceil(vp.width); c.height = Math.ceil(vp.height);
     var x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height);
     await page.render({ canvasContext: x, viewport: vp }).promise;
-    var data = await canvasBytes(c, 'image/jpeg', 0.88); c.width = c.height = 0;
+    var data = await canvasBytes(c, 'image/jpeg', q || 0.88); c.width = c.height = 0;
     return data ? { data: data, ext: 'jpeg' } : null;
   }
   var engine = createPdf2Docx(pdfjsLib, JSZip, { debug: location.hash === "#debug", measure: measure, imagePixels: imagePixels, imageToPng: imageToPng, renderPage: renderPage });
@@ -1351,7 +1355,8 @@ if (typeof module !== 'undefined') module.exports = createPdf2Docx;
     for (var i = 0; i < px.width * px.height; i += step) { var k = (d[i * 4] >> 3) + ',' + (d[i * 4 + 1] >> 3) + ',' + (d[i * 4 + 2] >> 3); if (!seen[k]) { seen[k] = 1; if (++n > 96) return false; } }
     return true; }
   function toJpeg(canvas, q) { return new Promise(function (res) { canvas.toBlob(function (b) { b.arrayBuffer().then(function (a) { res(new Uint8Array(a)); }); }, 'image/jpeg', q); }); }
-  async function compressNormal(bytes, prog) {
+  async function compressNormal(bytes, prog, maxSide, q) {
+    maxSide = maxSide || 2000; q = q || 0.72;
     var doc = await P.PDFDocument.load(bytes, { updateMetadata: false }), ctx = doc.context;
     var N = P.PDFName, S = { sub: N.of('Subtype'), img: N.of('Image'), filt: N.of('Filter'), dct: N.of('DCTDecode'), fl: N.of('FlateDecode'), cs: N.of('ColorSpace'), bpc: N.of('BitsPerComponent'),
       w: N.of('Width'), h: N.of('Height'), mask: N.of('Mask'), imask: N.of('ImageMask'), dec: N.of('Decode'), dp: N.of('DecodeParms'), smask: N.of('SMask'), rgb: N.of('DeviceRGB'), gray: N.of('DeviceGray'), cmyk: N.of('DeviceCMYK') };
@@ -1363,7 +1368,7 @@ if (typeof module !== 'undefined') module.exports = createPdf2Docx;
       try {
         if (dict.get(S.imask) || dict.get(S.mask) || dict.get(S.dec)) continue;
         var f = lk(ctx, dict.get(S.filt)); if (f && f.asArray) { var arr = f.asArray(); if (arr.length !== 1) continue; f = arr[0]; }
-        var w = num(ctx, dict.get(S.w)), h = num(ctx, dict.get(S.h)); if (!w || !h || w * h < 250000) continue;
+        var w = num(ctx, dict.get(S.w)), h = num(ctx, dict.get(S.h)); if (!w || !h || w * h < (maxSide < 2000 ? 120000 : 250000)) continue;
         var cs = lk(ctx, dict.get(S.cs)), comps = 0;
         if (cs === S.rgb) comps = 3; else if (cs === S.gray) comps = 1;
         else if (cs && cs.asArray && cs.asArray()[0] === N.of('ICCBased')) { var icc = lk(ctx, cs.asArray()[1]); var nn = icc && icc.dict ? num(ctx, icc.dict.get(N.of('N'))) : null; if (nn === 1 || nn === 3) comps = nn; }
@@ -1378,10 +1383,10 @@ if (typeof module !== 'undefined') module.exports = createPdf2Docx;
           if (fewColors(id)) continue; // gráfico/tabela/logo: JPEG borraria
           bmp = await createImageBitmap(id);
         } else continue;
-        var sc = Math.min(1, 2000 / Math.max(w, h)), W = Math.max(1, Math.round(w * sc)), H = Math.max(1, Math.round(h * sc));
+        var sc = Math.min(1, maxSide / Math.max(w, h)), W = Math.max(1, Math.round(w * sc)), H = Math.max(1, Math.round(h * sc));
         var cv = document.createElement('canvas'); cv.width = W; cv.height = H; var cx = cv.getContext('2d'); cx.fillStyle = '#fff'; cx.fillRect(0, 0, W, H); cx.drawImage(bmp, 0, 0, W, H); if (bmp.close) bmp.close();
-        var jpg = await toJpeg(cv, 0.72); cv.width = cv.height = 0;
-        if (jpg.length >= st.contents.length * 0.85) continue;
+        var jpg = await toJpeg(cv, q); cv.width = cv.height = 0;
+        if (jpg.length >= st.contents.length * (maxSide < 2000 ? 0.97 : 0.85)) continue;
         var ns = ctx.stream(jpg, { Type: 'XObject', Subtype: 'Image', Width: W, Height: H, ColorSpace: 'DeviceRGB', BitsPerComponent: 8, Filter: 'DCTDecode' });
         var sm = dict.get(S.smask); if (sm) ns.dict.set(S.smask, sm);
         ctx.assign(ref, ns); changed++;
@@ -1390,11 +1395,12 @@ if (typeof module !== 'undefined') module.exports = createPdf2Docx;
     prog(0.97, 'Salvando');
     return { bytes: await doc.save({ useObjectStreams: true }), changed: changed, images: cands.length };
   }
-  async function compressStrong(bytes, prog) {
+  async function compressStrong(bytes, prog, scale, q) {
+    scale = scale || 1.5; q = q || 0.65;
     var src = await pdfjsLib.getDocument({ data: bytes.slice(), isEvalSupported: false }).promise, out = await P.PDFDocument.create();
     for (var i = 1; i <= src.numPages; i++) {
       prog(i / (src.numPages + 1), 'Página ' + i + ' de ' + src.numPages);
-      var pg = await src.getPage(i), vp = pg.getViewport({ scale: 1 }), r = await C.renderPage(pg, 1.5);
+      var pg = await src.getPage(i), vp = pg.getViewport({ scale: 1 }), r = await C.renderPage(pg, scale, q);
       var img = await out.embedJpg(r.data), p = out.addPage([vp.width, vp.height]); p.drawImage(img, { x: 0, y: 0, width: vp.width, height: vp.height }); pg.cleanup();
     }
     try { await src.destroy(); } catch (e) {}
@@ -1417,15 +1423,28 @@ if (typeof module !== 'undefined') module.exports = createPdf2Docx;
       try {
         var bytes = new Uint8Array(await j.f.arrayBuffer());
         var prog = function (p, m) { j.bar.firstChild.style.width = Math.round(p * 100) + '%'; j.st.textContent = (lvl === 'forte' ? 'Forte · ' : 'Normal · ') + m; };
-        var r = lvl === 'forte' ? await compressStrong(bytes, prog) : await compressNormal(bytes, prog);
+        var on = $('tgtOn').checked, tgt = Math.max(0.1, parseFloat(String($('tgtMB').value).replace(',', '.')) || 5) * 1048576;
+        var ladder = lvl === 'forte' ? [[1.5, 0.65], [1.2, 0.55], [1.0, 0.45], [0.85, 0.4]] : [[2000, 0.72], [1700, 0.62], [1450, 0.55], [1250, 0.5], [1100, 0.45], [950, 0.4]];
+        var r = null, step = 0, hit = false;
+        for (var s = 0; s < ladder.length; s++) {
+          var tag = ladder.length > 1 && on && s ? ' (tentativa ' + (s + 1) + ')' : '';
+          var pr2 = (function (tag) { return function (p, m) { prog(p, m + tag); }; })(tag);
+          r = lvl === 'forte' ? await compressStrong(bytes, pr2, ladder[s][0], ladder[s][1]) : await compressNormal(bytes, pr2, ladder[s][0], ladder[s][1]);
+          step = s; if (!on || r.bytes.length <= tgt) { hit = r.bytes.length <= tgt; break; }
+          if (lvl === 'normal' && !r.images) break;
+          if (r.bytes.length > tgt * 2.2 && s + 2 < ladder.length) s++; // longe da meta: pula um nível
+        }
+        r.step = step; r.hit = hit; r.on = on; r.tgt = tgt; r.max = ladder.length;
         j.bar.hidden = true;
         var pct = Math.round((1 - r.bytes.length / bytes.length) * 100);
         if (r.bytes.length >= bytes.length * 0.97) {
-          j.st.className = 'st warn'; j.st.textContent = 'Este PDF já está otimizado (' + kb(bytes.length) + '); comprimir não reduziu.' + (lvl === 'normal' && !r.changed ? ' Ele não tem imagens grandes para reduzir.' : '');
+          j.st.className = 'st warn'; j.st.textContent = 'Comprimir não reduziu este PDF (' + kb(bytes.length) + ').' + (lvl === 'normal' && !r.images ? ' Ele não tem imagens para reduzir: provavelmente é só texto.' : lvl === 'normal' ? ' As imagens dele não puderam ser reduzidas neste modo; tente o modo Forte.' : '');
         } else {
           let name = j.f.name.replace(/\.pdf$/i, '') + ' (comprimido).pdf', data = r.bytes; resC.push({ name: name, data: data });
           var b = el('button', 'btn', I.dl + 'Baixar PDF'); b.onclick = function () { C.save(name, data, 'application/pdf'); }; j.slot.appendChild(b);
-          j.li.className = 'done3'; j.st.className = 'st ok'; j.st.textContent = kb(bytes.length) + ' → ' + kb(r.bytes.length) + ' (' + pct + '% menor)' + (lvl === 'forte' ? ' · texto virou imagem' : '');
+          j.li.className = 'done3'; j.st.className = 'st ok'; j.st.textContent = kb(bytes.length) + ' → ' + kb(r.bytes.length) + ' (' + pct + '% menor)' + (lvl === 'forte' ? ' · texto virou imagem' : '') +
+            (r.step > 0 ? ' · qualidade ' + (r.step >= r.max - 2 ? 'baixa' : 'média') + ': confira se dá para ler' : '');
+          if (r.on && !r.hit) { j.st.className = 'st warn'; j.st.textContent += '. Não chegou a ' + kb(r.tgt) + (lvl === 'normal' ? ': tente o modo Forte ou divida o PDF na aba Juntar (campo "usar páginas").' : ': divida o PDF na aba Juntar (campo "usar páginas").'); }
         }
       } catch (e) { j.bar.hidden = true; j.st.className = 'st err'; j.li.className = 'bad'; j.st.textContent = errMsg(e); }
     }
