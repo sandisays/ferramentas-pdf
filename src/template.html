@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- Esta política faz o próprio navegador bloquear qualquer envio de dados para a internet. -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' blob:; style-src 'unsafe-inline'; img-src data: blob:; font-src data: blob:; worker-src blob:; connect-src 'none'; form-action 'none'; base-uri 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' blob: 'wasm-unsafe-eval'; style-src 'unsafe-inline'; img-src data: blob:; font-src data: blob:; worker-src blob:; connect-src 'none'; form-action 'none'; base-uri 'none'">
 <title>Ferramentas PDF (offline)</title>
 <style>
   @font-face { font-family:'Fredoka'; font-weight:600; font-style:normal; src:url(data:font/woff2;base64,/*__FREDOKA600__*/) format('woff2'); }
@@ -75,7 +75,7 @@
   .credit { margin-top:6px; font-weight:600; color:var(--ink); }
   .credit span { color:var(--acc); }
   .tabs { display:flex; gap:6px; background:var(--card); padding:6px; border-radius:16px; box-shadow:var(--shadow); margin-bottom:16px; }
-  .tabs button { flex:1; font:inherit; font-weight:600; font-size:14px; border:0; background:transparent; color:var(--mute); padding:10px 8px; border-radius:11px; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:7px; transition: background .15s, color .15s; }
+  .tabs button { flex:1; white-space:nowrap; font:inherit; font-weight:600; font-size:14px; border:0; background:transparent; color:var(--mute); padding:10px 8px; border-radius:11px; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:7px; transition: background .15s, color .15s; }
   .tabs button:hover { color:var(--ink); background:var(--accbg); }
   .tabs button[aria-selected="true"] { background:var(--fill); color:#fff; }
   .opts { display:grid; gap:10px; margin-top:16px; }
@@ -100,14 +100,14 @@
   .tgt input[type=checkbox] { accent-color:var(--fill); width:16px; height:16px; } .tgt small { color:var(--mute); }
   .note { font-size:13px; color:var(--mute); margin:12px 2px 0; }
   [hidden] { display:none !important; }
-  @media (max-width:520px) { .tabs button span.lg { display:none; }  main { padding-top:24px; } h1 { font-size:24px; } .panel { padding:14px; } .flist li { grid-template-columns:1fr; } .logo { width:46px; height:46px; } }
+  @media (max-width:520px) { .tabs { gap:2px; padding:4px; } .tabs button { padding:9px 4px; font-size:13px; gap:4px; } .tabs button svg { display:none; }  main { padding-top:24px; } h1 { font-size:24px; } .panel { padding:14px; } .flist li { grid-template-columns:1fr; } .logo { width:46px; height:46px; } }
 </style>
 </head>
 <body>
 <main>
   <header>
     <div class="logo"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13l1.5 4 1.5-3 1.5 3 1.5-4"/></svg></div>
-    <div class="grow"><h1>Ferramentas PDF</h1><p class="sub">Converter para Word, juntar e comprimir, tudo no seu computador.</p></div>
+    <div class="grow"><h1>Ferramentas PDF</h1><p class="sub">Converter para Word, OCR, juntar e comprimir, tudo no seu computador.</p></div>
     <button id="theme" title="Modo claro / escuro" aria-label="Alternar modo claro e escuro">
       <svg class="moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
       <svg class="sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
@@ -120,9 +120,10 @@
   </div>
 
   <nav class="tabs" role="tablist">
-    <button role="tab" data-tab="conv" aria-selected="true"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13l1.5 4 1.5-3 1.5 3 1.5-4"/></svg>Converter<span class="lg">para Word</span></button>
-    <button role="tab" data-tab="join" aria-selected="false"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="10" rx="1.5"/><rect x="13" y="11" width="8" height="10" rx="1.5"/><path d="M7 17h3M17 7h-3M14 4l3 3-3 3M10 14l-3 3 3 3"/></svg>Juntar<span class="lg">PDFs</span></button>
-    <button role="tab" data-tab="comp" aria-selected="false"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"/></svg>Comprimir<span class="lg">PDF</span></button>
+    <button role="tab" data-tab="conv" aria-selected="true"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13l1.5 4 1.5-3 1.5 3 1.5-4"/></svg>Para Word</button>
+    <button role="tab" data-tab="join" aria-selected="false"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="10" rx="1.5"/><rect x="13" y="11" width="8" height="10" rx="1.5"/><path d="M7 17h3M17 7h-3M14 4l3 3-3 3M10 14l-3 3 3 3"/></svg>Juntar</button>
+    <button role="tab" data-tab="ocr" aria-selected="false"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M8 9h8M8 12h8M8 15h5"/></svg>OCR</button>
+    <button role="tab" data-tab="comp" aria-selected="false"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"/></svg>Comprimir</button>
   </nav>
 
   <section class="panel" data-panel="conv">
@@ -134,6 +135,7 @@
       <input id="file" type="file" accept="application/pdf,.pdf" multiple hidden>
     </div>
 
+    <label class="tgt"><input type="checkbox" id="ocrOn" checked> Ler o texto de páginas escaneadas (OCR) <small>· a página vira texto editável; carimbos e assinaturas da digitalização não entram</small></label>
     <div class="row" id="actions" hidden>
       <h2>Arquivos</h2>
       <div><button class="btn ghost" id="clear">Limpar</button><button class="btn" id="all">Baixar todos</button></div>
@@ -153,6 +155,19 @@
     <ul id="listJ" class="flist"></ul>
     <button class="btn bigbtn" id="goJ" disabled>Juntar e baixar</button>
     <div id="resJ"></div>
+  </section>
+
+  <section class="panel" data-panel="ocr" hidden>
+    <div id="dropO" class="drop" tabindex="0" role="button" aria-label="Escolher PDFs escaneados">
+      <div class="dropicon"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4"/><path d="m7 9 5-5 5 5"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg></div>
+      <strong>Arraste PDFs escaneados</strong>
+      <span>O PDF continua igual, mas ganha texto pesquisável e copiável</span><br>
+      <span class="pick">Escolher arquivos</span>
+      <input id="fileO" type="file" accept="application/pdf,.pdf" multiple hidden>
+    </div>
+    <p class="note">Leva alguns segundos por página. Páginas que já têm texto são mantidas como estão. Para ter o texto editável no Word, use a aba Converter (o OCR já vem ligado lá).</p>
+    <div class="row" id="actionsO" hidden><h2>Arquivos</h2><div><button class="btn ghost" id="clearO">Limpar</button><button class="btn" id="allO">Baixar todos</button></div></div>
+    <ul id="listO" class="flist"></ul>
   </section>
 
   <section class="panel" data-panel="comp" hidden>
@@ -176,6 +191,7 @@
     <b class="t"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>Antes de usar, saiba que</b>
     <ul>
       <li><b>Quantidade:</b> não há limite fixo de arquivos. Eles entram numa fila e são convertidos um de cada vez.</li>
+      <li><b>OCR:</b> leva alguns segundos por página (mais no Citrix) e pode errar letras; sempre confira o texto reconhecido.</li>
       <li><b>Tamanho:</b> o limite é a memória do seu computador. PDFs muito grandes (acima de uns 100 MB ou centenas de páginas) podem demorar ou travar a aba; nesse caso, divida o PDF.</li>
       <li><b>Baixar todos:</b> o navegador baixa um arquivo por vez e pode pedir permissão para downloads múltiplos na primeira vez.</li>
       <li><b>Nada fica salvo:</b> ao fechar ou recarregar a aba, os convertidos somem. Baixe antes de sair.</li>
@@ -189,7 +205,7 @@
     <ul>
       <li><b>Mantém:</b> tamanho e orientação da página, margens, fontes, negrito, itálico, sublinhado, tachado, cor do texto, sobrescrito, alinhamento, recuos, tabelas (bordas, células mescladas, sombreado, bordas diagonais), imagens, cabeçalho e rodapé com numeração de página automática.</li>
       <li><b>Privacidade:</b> a conversão acontece dentro desta página. O arquivo não é enviado, salvo nem guardado; ao fechar a aba, some tudo. A página bloqueia tecnicamente qualquer conexão de rede.</li>
-      <li><b>PDF escaneado</b> (foto ou digitalização): a página entra no Word como imagem, sem texto editável, porque não há reconhecimento de texto (OCR).</li>
+      <li><b>PDF escaneado</b> (foto ou digitalização): com o OCR ligado, o texto é reconhecido e vira editável; confira, porque o OCR pode errar letras, principalmente em digitalizações ruins, carimbos e manuscritos. Com o OCR desligado, a página entra como imagem.</li>
       <li><b>Pode precisar de ajuste manual:</b> tabelas sem bordas, texto em várias colunas, caixas de texto giradas, gráficos vetoriais e formulários preenchíveis.</li>
       <li><b>PDF com senha</b> de abertura não é convertido.</li>
     </ul>
@@ -204,6 +220,10 @@
 <script type="text/plain" id="pdfworker">/*__WORKER__*/</script>
 <script>/*__JSZIP__*/</script>
 <script>/*__PDFLIB__*/</script>
+<script>/*__TESS__*/</script>
+<script type="text/plain" id="ocr-worker">/*__TESSWORKER__*/</script>
+<script type="text/plain" id="ocr-core">/*__TESSCORE__*/</script>
+<script type="text/plain" id="ocr-lang">/*__TESSLANG__*/</script>
 <script>/*__ENGINE__*/</script>
 <script>
 (function () {
@@ -277,7 +297,59 @@
     var data = await canvasBytes(c, 'image/jpeg', q || 0.88); c.width = c.height = 0;
     return data ? { data: data, ext: 'jpeg' } : null;
   }
-  var engine = createPdf2Docx(pdfjsLib, JSZip, { debug: location.hash === "#debug", measure: measure, imagePixels: imagePixels, imageToPng: imageToPng, renderPage: renderPage });
+  /* ---------- OCR (Tesseract, tudo local) ---------- */
+  var OCR = (function () {
+    var wk = null, starting = null, urls = [];
+    function blobURL(text) { var u = URL.createObjectURL(new Blob([text], { type: 'text/javascript' })); urls.push(u); return u; }
+    function get(onLog) {
+      if (wk) return Promise.resolve(wk);
+      if (starting) return starting;
+      starting = (async function () {
+        // um único worker: idioma + bloqueio de rede + núcleo + worker do Tesseract (sem importScripts)
+        var guard = ";var _d=function(s){var b=atob(s),u=new Uint8Array(b.length);for(var i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u;};" +
+          "var _f=self.fetch;self.fetch=function(u,o){u=String(u);for(var k in self.__TL){if(u.indexOf('/'+k+'.traineddata')>=0){return Promise.resolve(new Response(_d(self.__TL[k])));}}" +
+          "if(u.indexOf('data:')===0&&_f)return _f(u,o);return Promise.reject(new Error('Rede bloqueada'));};\n";
+        var wurl = URL.createObjectURL(new Blob([$('ocr-lang').textContent, guard, $('ocr-core').textContent, '\n;if(typeof TesseractCore==="undefined"&&typeof TesseractCoreWASM!=="undefined")self.TesseractCore=TesseractCoreWASM;\n', $('ocr-worker').textContent], { type: 'text/javascript' })); urls.push(wurl);
+        wk = await Tesseract.createWorker('por', 1, { workerPath: wurl, workerBlobURL: false, corePath: 'https://ocr.local/core.js',
+          langPath: 'https://ocr.local/lang', cacheMethod: 'none', gzip: true, logger: function (m) { if (onLog) onLog(m); } });
+        return wk;
+      })();
+      var p = starting; p.then(function () { starting = null; }, function () { starting = null; wk = null; }); return p;
+    }
+    // renderiza a página e devolve as palavras em pontos (coordenadas do PDF na escala 1, origem no topo)
+    async function page(pg, onProg) {
+      var w = await get();
+      var vp1 = pg.getViewport({ scale: 1 }), sc = Math.min(300 / 72, 3600 / Math.max(vp1.width, vp1.height)), vp = pg.getViewport({ scale: sc });
+      var c = document.createElement('canvas'); c.width = Math.ceil(vp.width); c.height = Math.ceil(vp.height);
+      var x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height);
+      await pg.render({ canvasContext: x, viewport: vp }).promise;
+      // apaga linhas longas (bordas de tabela) para o OCR enxergar o texto das células
+      try { var W = c.width, H = c.height, id = x.getImageData(0, 0, W, H), d = id.data, minH = Math.round(0.12 * W), minV = Math.round(16 * sc), i, k, run;
+        var dk = function (p) { return d[p] + d[p + 1] + d[p + 2] < 380; };
+        for (var yy = 0; yy < H; yy++) { run = 0; for (var xx = 0; xx <= W; xx++) { if (xx < W && dk((yy * W + xx) * 4)) run++; else { if (run >= minH) for (k = xx - run; k < xx; k++) { i = (yy * W + k) * 4; d[i] = d[i + 1] = d[i + 2] = 255; } run = 0; } } }
+        for (var xx2 = 0; xx2 < W; xx2++) { run = 0; for (var yy2 = 0; yy2 <= H; yy2++) { if (yy2 < H && dk((yy2 * W + xx2) * 4)) run++; else { if (run >= minV) for (k = yy2 - run; k < yy2; k++) { i = (k * W + xx2) * 4; d[i] = d[i + 1] = d[i + 2] = 255; } run = 0; } } }
+        x.putImageData(id, 0, 0); } catch (e) {}
+      if (onProg) onProg('Reconhecendo texto');
+      var r = await w.recognize(c, {}, { blocks: true, text: false });
+      c.width = c.height = 0;
+      var out = [];
+      (r.data.blocks || []).forEach(function (b) { (b.paragraphs || []).forEach(function (p) { (p.lines || []).forEach(function (ln) {
+        var bl = ln.baseline, ra = ln.rowAttributes || {};
+        (ln.words || []).forEach(function (wd) {
+          var t = (wd.text || '').trim().replace(/^[|=—_~¦]+|[|=—_~¦]+$/g, ''); if (!t || wd.confidence < 15 || /^[\-–—.,:;'"`´^]+$/.test(t)) return;
+          var bb = wd.bbox, cx = (bb.x0 + bb.x1) / 2;
+          var by = bl && bl.x1 !== bl.x0 ? bl.y0 + (bl.y1 - bl.y0) * (cx - bl.x0) / (bl.x1 - bl.x0) : bb.y1;
+          out.push({ str: t, x0: bb.x0 / sc, x1: bb.x1 / sc, y0: bb.y0 / sc, y1: bb.y1 / sc, base: by / sc, row: (ra.rowHeight || (bb.y1 - bb.y0)) / sc,
+            asc: (ra.ascenders || 0) / sc, desc: (ra.descenders || 0) / sc, conf: wd.confidence, sc: sc, vpScale: sc });
+        });
+      }); }); });
+      return { words: out, viewport: vp, scale: sc };
+    }
+    return { get: get, page: page };
+  })();
+  window.__OCR = OCR;
+
+  var engine = createPdf2Docx(pdfjsLib, JSZip, { debug: location.hash === "#debug", measure: measure, imagePixels: imagePixels, imageToPng: imageToPng, ocrPage: async function (page) { return (await OCR.page(page)).words; }, renderPage: renderPage });
   window.__engine = engine;
 
   var list = $('list'), queue = [], busy = false, results = [];
@@ -306,7 +378,7 @@
       var j = queue.shift();
       try {
         var buf = new Uint8Array(await j.f.arrayBuffer());
-        var r = await engine.convert(buf, { onProgress: (function (j) { return function (p, msg) { j.bar.firstChild.style.width = Math.round(p * 100) + '%'; j.st.textContent = msg; }; })(j) });
+        var r = await engine.convert(buf, { ocr: $('ocrOn').checked, onProgress: (function (j) { return function (p, msg) { j.bar.firstChild.style.width = Math.round(p * 100) + '%'; j.st.textContent = msg; }; })(j) });
         var out = j.f.name.replace(/\.pdf$/i, '') + '.docx';
         results.push({ name: out, data: r.data });
         var b = document.createElement('button'); b.className = 'btn'; b.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12"/><path d="m7 11 5 5 5-5"/><path d="M5 20h14"/></svg>Baixar .docx';
@@ -315,6 +387,8 @@
         var parts = [r.pages + (r.pages > 1 ? ' páginas' : ' página'), r.tables + (r.tables === 1 ? ' tabela' : ' tabelas')];
         if (r.images) parts.push(r.images + (r.images === 1 ? ' imagem' : ' imagens'));
         j.st.textContent = 'Pronto: ' + parts.join(', ') + '.'; j.st.className = 'st ok';
+        if (r.ocrPages) { j.st.textContent += ' ' + r.ocrPages + (r.ocrPages > 1 ? ' páginas escaneadas tiveram o texto reconhecido (OCR): confira o texto.' : ' página escaneada teve o texto reconhecido (OCR): confira o texto.'); j.st.className = 'st warn'; }
+        if (r.ocrErr) { j.st.textContent += ' O OCR falhou: ' + r.ocrErr; j.st.className = 'st warn'; }
         if (r.scanned) { j.st.textContent += ' ' + r.scanned + (r.scanned > 1 ? ' páginas escaneadas entraram' : ' página escaneada entrou') + ' como imagem (sem texto editável).'; j.st.className = 'st warn'; }
       } catch (e) {
         j.bar.hidden = true; j.st.className = 'st err'; j.li.classList.add('bad');
@@ -335,7 +409,7 @@
   drop.onclick = function () { file.click(); };
   drop.onkeydown = function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); file.click(); } };
   file.onchange = function () { add(file.files); file.value = ''; };
-  var tab = 'conv', drops = { conv: drop, join: $('dropJ'), comp: $('dropC') }, adders = { conv: add };
+  var tab = 'conv', drops = { conv: drop, join: $('dropJ'), comp: $('dropC'), ocr: $('dropO') }, adders = { conv: add };
   window.__adders = adders;
   function hasFiles(e) { return e.dataTransfer && Array.prototype.indexOf.call(e.dataTransfer.types || [], 'Files') >= 0; }
   ['dragenter', 'dragover'].forEach(function (t) { document.addEventListener(t, function (e) { if (!hasFiles(e)) return; e.preventDefault(); drops[tab].classList.add('over'); }); });
@@ -346,7 +420,7 @@
     Array.prototype.forEach.call(document.querySelectorAll('[data-panel]'), function (p) { p.hidden = p.getAttribute('data-panel') !== n; });
     Array.prototype.forEach.call(document.querySelectorAll('[data-only]'), function (p) { p.hidden = p.getAttribute('data-only') !== n; }); }
   Array.prototype.forEach.call(document.querySelectorAll('.tabs button'), function (b) { b.onclick = function () { showTab(b.getAttribute('data-tab')); }; });
-  window.__ctx = { $: $, save: save, adders: adders, renderPage: renderPage, drops: drops };
+  window.__ctx = { $: $, save: save, adders: adders, renderPage: renderPage, drops: drops, OCR: OCR };
   $('all').onclick = function () { results.forEach(function (r, i) { setTimeout(function () { save(r.name, r.data); }, i * 400); }); };
   $('clear').onclick = function () { if (busy) return; list.innerHTML = ''; results = []; $('actions').hidden = true; };
 })();
@@ -369,7 +443,7 @@
   function wire(dropId, inputId, fn) { var d = $(dropId), f = $(inputId);
     d.onclick = function () { f.click(); };
     d.onkeydown = function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); f.click(); } };
-    f.onchange = function () { fn(f.files); f.value = ''; }; C.adders[dropId === 'dropJ' ? 'join' : 'comp'] = fn; }
+    f.onchange = function () { fn(f.files); f.value = ''; }; C.adders[dropId === 'dropJ' ? 'join' : dropId === 'dropO' ? 'ocr' : 'comp'] = fn; }
 
   /* ================= JUNTAR ================= */
   var J = [], listJ = $('listJ'), dragI = -1;
@@ -548,6 +622,64 @@
     busyC = false;
   }
   wire('dropC', 'fileC', addC);
+
+  /* ================= OCR: PDF PESQUISÁVEL ================= */
+  var listO = $('listO'), qO = [], busyO = false, resO = [];
+  async function searchable(bytes, prog) {
+    var src = await pdfjsLib.getDocument({ data: bytes.slice(), isEvalSupported: false }).promise;
+    var out = await P.PDFDocument.load(bytes, { updateMetadata: false }), pages = out.getPages();
+    var font = await out.embedFont(P.StandardFonts.Helvetica), okCh = {}, done = 0, kept = 0, words = 0;
+    var enc = function (s) { var r = ''; for (var i = 0; i < s.length; i++) { var ch = s[i]; if (!(ch in okCh)) { try { font.encodeText(ch); okCh[ch] = true; } catch (e) { okCh[ch] = false; } } r += okCh[ch] ? ch : '?'; } return r; };
+    prog(0.02, 'Preparando o OCR');
+    await C.OCR.get();
+    for (var i = 1; i <= src.numPages; i++) {
+      var page = await src.getPage(i), tc = await page.getTextContent();
+      var chars = tc.items.reduce(function (n, it) { return n + (it.str || '').replace(/\s/g, '').length; }, 0);
+      if (chars >= 20) { kept++; page.cleanup(); continue; } // já tem texto
+      var r = await C.OCR.page(page, function (m) { prog((i - 0.5) / (src.numPages + 1), 'Página ' + i + ' de ' + src.numPages + ' · ' + m); });
+      var vp = r.viewport, sc = r.scale, pp = pages[i - 1], key = pp.node.newFontDictionary('FOCR', font.ref), ops = [P.pushGraphicsState(), P.beginText(), P.setTextRenderingMode(P.TextRenderingMode.Invisible)];
+      r.words.forEach(function (w) {
+        var txt = enc(w.str + ' '), bx = w.x0 * sc, ex = w.x1 * sc, by = w.base * sc, hh = Math.max(1, (w.base - w.y0) * sc);
+        var p0 = vp.convertToPdfPoint(bx, by), p1 = vp.convertToPdfPoint(ex, by), p2 = vp.convertToPdfPoint(bx, by - hh);
+        var L = Math.hypot(p1[0] - p0[0], p1[1] - p0[1]), H = Math.hypot(p2[0] - p0[0], p2[1] - p0[1]); if (L < 0.5 || H < 0.5) return;
+        var ux = (p1[0] - p0[0]) / L, uy = (p1[1] - p0[1]) / L, fs = Math.max(1, H / 0.72), tw0 = font.widthOfTextAtSize(enc(w.str), fs), hs = tw0 > 0 ? L / tw0 : 1;
+        ops.push(P.setFontAndSize(key, fs), P.setTextMatrix(ux * hs, uy * hs, -uy, ux, p0[0], p0[1]), P.showText(font.encodeText(txt))); words++;
+      });
+      ops.push(P.endText(), P.popGraphicsState()); pp.pushOperators.apply(pp, ops); done++; page.cleanup();
+    }
+    try { await src.destroy(); } catch (e) {}
+    prog(0.97, 'Salvando');
+    return { bytes: await out.save({ useObjectStreams: true }), done: done, kept: kept, words: words };
+  }
+  function addO(files) {
+    Array.prototype.forEach.call(files, function (f) {
+      var li = el('li'), nm = el('div', 'name'), slot = el('div'), bar = el('div', 'bar', '<i></i>'), st = el('div', 'st');
+      nm.textContent = f.name; li.appendChild(nm); li.appendChild(slot); li.appendChild(bar); li.appendChild(st); listO.appendChild(li);
+      if (!isPdf(f)) { st.textContent = 'Este arquivo não é um PDF.'; st.className = 'st err'; li.className = 'bad'; bar.hidden = true; }
+      else { st.textContent = 'Na fila…'; qO.push({ f: f, li: li, slot: slot, bar: bar, st: st }); }
+    });
+    $('actionsO').hidden = !listO.children.length; runO();
+  }
+  async function runO() {
+    if (busyO) return; busyO = true;
+    while (qO.length) {
+      var j = qO.shift();
+      try {
+        var bytes = new Uint8Array(await j.f.arrayBuffer());
+        var r = await searchable(bytes, function (p, m) { j.bar.firstChild.style.width = Math.round(p * 100) + '%'; j.st.textContent = m; });
+        j.bar.hidden = true;
+        if (!r.done) { j.st.className = 'st warn'; j.st.textContent = 'Todas as páginas já têm texto; nada a fazer.'; continue; }
+        let name = j.f.name.replace(/\.pdf$/i, '') + ' (pesquisável).pdf', data = r.bytes; resO.push({ name: name, data: data });
+        var b = el('button', 'btn', I.dl + 'Baixar PDF'); b.onclick = function () { C.save(name, data, 'application/pdf'); }; j.slot.appendChild(b);
+        j.li.className = 'done3'; j.st.className = 'st ok';
+        j.st.textContent = r.done + (r.done > 1 ? ' páginas reconhecidas' : ' página reconhecida') + ' (' + r.words + ' palavras)' + (r.kept ? ', ' + r.kept + ' já tinham texto' : '') + '. Confira a busca (Ctrl+F) no PDF.';
+      } catch (e) { j.bar.hidden = true; j.st.className = 'st err'; j.li.className = 'bad'; j.st.textContent = errMsg(e); }
+    }
+    busyO = false;
+  }
+  wire('dropO', 'fileO', addO);
+  $('clearO').onclick = function () { if (busyO) return; listO.innerHTML = ''; resO = []; $('actionsO').hidden = true; };
+  $('allO').onclick = function () { resO.forEach(function (r, i) { setTimeout(function () { C.save(r.name, r.data, 'application/pdf'); }, i * 400); }); };
   $('clearC').onclick = function () { if (busyC) return; listC.innerHTML = ''; resC = []; $('actionsC').hidden = true; };
   $('allC').onclick = function () { resC.forEach(function (r, i) { setTimeout(function () { C.save(r.name, r.data, 'application/pdf'); }, i * 400); }); };
 })();

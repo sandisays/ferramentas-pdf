@@ -180,11 +180,11 @@ function createPdf2Docx(pdfjsLib, JSZip, env) {
           if (m) { m.o1 = g.o; m.a = Math.min(m.a, g.a); m.b = Math.max(m.b, g.b); } else out.push({ o0: g.o, o1: g.o, a: g.a, b: g.b }); }
         return out.filter(c => c.o1 - c.o0 < 8); };
       let rh = scan(W2, H2, hRidge, Math.max(30, Math.round(0.12 * W2)), Math.max(3, Math.round(0.012 * W2)));
-      let rv = scan(H2, W2, vRidge, Math.max(14, Math.round(0.06 * H2)), 3);
+      let rv = scan(H2, W2, vRidge, Math.max(14, Math.round(0.015 * H2)), 3);
       // agrupa por posição; descarta colunas com pouca cobertura (restos de diagonais) e completa linhas quase inteiras
       const groupBy = arr => { const gs = []; arr.slice().sort((p, q) => p.o0 - q.o0).forEach(g => { const l = gs[gs.length - 1]; if (l && g.o0 - l.o1 <= 2) { l.items.push(g); l.o1 = Math.max(l.o1, g.o1); } else gs.push({ o0: g.o0, o1: g.o1, items: [g] }); }); return gs; };
       const covLen = items => { const iv = items.map(g => [g.a, g.b]).sort((p, q) => p[0] - q[0]); let t = 0, end = -1; for (const [a2, b2] of iv) { if (b2 > end) { t += b2 - Math.max(a2, end); end = b2; } } return t; };
-      rv = groupBy(rv).filter(g => covLen(g.items) >= 0.15 * H2).flatMap(g => g.items.map(q => ({ o0: g.o0, o1: g.o1, a: q.a, b: q.b })));
+      rv = groupBy(rv).filter(g => covLen(g.items) >= 0.05 * H2).flatMap(g => g.items.map(q => ({ o0: g.o0, o1: g.o1, a: q.a, b: q.b })));
       if (rh.length) { const minA = Math.min(...rh.map(g => g.a)), maxB = Math.max(...rh.map(g => g.b));
         rh = groupBy(rh).flatMap(g => covLen(g.items) >= 0.7 * (maxB - minA) ? [{ o0: g.o0, o1: g.o1, a: minA, b: maxB }] : g.items.map(q => ({ o0: g.o0, o1: g.o1, a: q.a, b: q.b }))); }
       if (env.debug) console.log('RASTER', W2, H2, 'H', JSON.stringify(rh.map(g => [g.o0, g.o1, g.a, g.b])), 'V', JSON.stringify(rv.map(g => [g.o0, g.o1, g.a, g.b])));
@@ -213,6 +213,31 @@ function createPdf2Docx(pdfjsLib, JSZip, env) {
         size, font: fi, spB: lead > 0, spA: trail > 0, color: colorAt(t[4], t[5]) });
     }
     return { W, H, items, hs, vs, diags, fills, images, rasters, index: pageIndex, page };
+  }
+
+  /* ---------- OCR: palavras reconhecidas viram itens de texto ---------- */
+  function ocrItems(words) {
+    if (!words.length) return [];
+    let family = 'Arial';
+    if (env.measure) {
+      let best = Infinity;
+      for (const fam of ['Arial', 'Times New Roman', 'Calibri']) {
+        const fo = { family: fam, bold: false, italic: false }, rs = [];
+        for (const w of words) { if (w.str.length < 4) continue; const sz = w.row * 1.17, m = env.measure(w.str, fo, sz); if (m == null) { rs.length = 0; break; } rs.push(m / Math.max(1, w.x1 - w.x0)); }
+        if (rs.length < 5) continue; rs.sort((a, b) => a - b); const d = Math.abs(Math.log(rs[rs.length >> 1]));
+        if (d < best) { best = d; family = fam; }
+      }
+    }
+    const m = METRICS[family.toLowerCase()] || METRICS.arial;
+    const font = { family, bold: false, italic: false, asc: m[0], dsc: m[1], spw: family === 'Times New Roman' ? 0.25 : 0.28, ocr: true };
+    // tamanho pela altura da própria palavra (conforme tenha maiúsculas/hastes e descendentes), mediana por linha
+    const est = w => { const h = w.y1 - w.y0, t = w.str, up = /[A-ZÀ-ÝbdfhklĺtíÍ0-9()\[\]\/|!?%&#@$]/.test(t), dn = /[gjpqyçÇ,;()\[\]\/|]/.test(t);
+      const k = up && dn ? 0.93 : up ? 0.71 : dn ? 0.70 : 0.48; return h / k; };
+    const lines = {}; for (const w of words) { const k = Math.round(w.base * 2); (lines[k] = lines[k] || []).push(est(w)); }
+    const med = a => { const b = a.slice().sort((p, q) => p - q); return b[b.length >> 1]; };
+    return words.map(w => { const k = Math.round(w.base * 2), ln = med(lines[k] || [est(w)]), own = est(w);
+      let sz = Math.min(ln, w.row * 1.17 * 1.15); if (own < 0.75 * ln) { if (w.conf < 70) return null; sz = own; } // índice pequeno: só se lido com segurança
+      return { str: w.str, x: w.x0, y: w.base, w: Math.max(1, w.x1 - w.x0), size: Math.max(4, Math.round(sz * 2) / 2), font, spB: false, spA: false, color: null, ocr: w }; }).filter(Boolean);
   }
 
   /* ---------- tabelas ---------- */
@@ -706,11 +731,16 @@ function createPdf2Docx(pdfjsLib, JSZip, env) {
     docState.compressed = 0; docState.stretched = 0; floatId = 7000;
     const doc = await pdfjsLib.getDocument(Object.assign({ data, useSystemFonts: true, isEvalSupported: false }, env.docParams || {})).promise;
     const N = doc.numPages, pages = [];
-    const media = [], rels = []; let scanned = 0, nTables = 0, nImages = 0;
+    const media = [], rels = []; let scanned = 0, nTables = 0, nImages = 0, ocrPages = 0, ocrErr = null;
     for (let i = 1; i <= N; i++) {
       prog(i / N * 0.8, 'Lendo página ' + i + ' de ' + N);
       const page = await doc.getPage(i);
       const pg = await extractPage(page, i - 1);
+      if (opts.ocr && env.ocrPage && !pg.items.length && pg.images.some(im => (im.x1 - im.x0) * (im.y1 - im.y0) > 0.3 * pg.W * pg.H)) {
+        prog((i - 0.5) / N * 0.8, 'Lendo o texto da página ' + i + ' de ' + N + ' (OCR)');
+        try { pg.items = ocrItems(await env.ocrPage(page)); if (pg.items.length) { pg.ocr = true; ocrPages++;
+          pg.hs = pg.hs.filter(h => !pg.items.some(it => h.y > it.ocr.y0 - 0.8 && h.y < it.ocr.y1 + 0.8 && Math.min(h.x1, it.ocr.x1) - Math.max(h.x0, it.ocr.x0) > 0.3 * (it.ocr.x1 - it.ocr.x0) && (h.x1 - h.x0) < 3 * (it.ocr.x1 - it.ocr.x0) + 40)); } } catch (e) { ocrErr = e; }
+      }
       analyzePage(pg); nTables += pg.tables.length;
       pg.pics = [];
       if (env.imageToPng) {
@@ -719,6 +749,7 @@ function createPdf2Docx(pdfjsLib, JSZip, env) {
             if (r) { pg.pics.push({ x0: 0, y0: 0, x1: pg.W, y1: pg.H, data: r.data, ext: r.ext, behind: true }); scanned++; nTables -= pg.tables.length; pg.tables = []; } }
         } else for (const im of pg.images) {
           if (im.skip) continue;
+          if (pg.ocr && (im.x1 - im.x0) * (im.y1 - im.y0) > 0.3 * pg.W * pg.H) continue; // a digitalização foi trocada pelo texto reconhecido
           if (im.raster && pg.tables.some(t => { const ox = Math.min(t.x1, im.x1) - Math.max(t.x0, im.x0), oy = Math.min(t.y1, im.y1) - Math.max(t.y0, im.y0); return ox > 0 && oy > 0 && ox * oy > 0.6 * (im.x1 - im.x0) * (im.y1 - im.y0); })) continue;
           const under = pg.items.some(it => it.x + it.w / 2 > im.x0 && it.x + it.w / 2 < im.x1 && it.y - it.size * 0.3 > im.y0 && it.y - it.size * 0.3 < im.y1);
           try { const r = await env.imageToPng(page, im.ref); if (r) { pg.pics.push(Object.assign({ data: r.data, ext: r.ext, behind: under || (im.x1 - im.x0) * (im.y1 - im.y0) > 0.5 * pg.W * pg.H }, im)); nImages++; } } catch (e) {}
@@ -863,7 +894,7 @@ function createPdf2Docx(pdfjsLib, JSZip, env) {
     const out = await zip.generateAsync({ type: 'uint8array', compression: 'DEFLATE', mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
     try { await doc.destroy(); } catch (e) {}
     prog(1, 'Pronto');
-    return { data: out, pages: N, tables: nTables, images: nImages, scanned };
+    return { data: out, pages: N, tables: nTables, images: nImages, scanned, ocrPages, ocrErr: ocrErr ? String(ocrErr.message || ocrErr) : null };
   }
   return { convert };
 }
