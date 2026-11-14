@@ -321,7 +321,8 @@ function createPdf2Docx(pdfjsLib, JSZip, env) {
       const votes = {}; let nS = 0;
       const ras = (pg.rasters || []).find(r => (g.x0 + g.x1) / 2 > r.x0 && (g.x0 + g.x1) / 2 < r.x1 && (g.y0 + g.y1) / 2 > r.y0 && (g.y0 + g.y1) / 2 < r.y1);
       const lumAt = (r, x, y) => { const px = Math.min(r.w - 1, Math.max(0, Math.round((x - r.x0) / r.sx))), py = Math.min(r.h - 1, Math.max(0, Math.round((y - r.y0) / r.sy))), k = (py * r.w + px) * 4;
-        return [r.data[k], r.data[k + 1], r.data[k + 2]]; };
+        const al = r.data[k + 3] == null ? 255 : r.data[k + 3], o = 255 - al; // fundo transparente (imagem com máscara) conta como branco
+        return [(r.data[k] * al + 255 * o) / 255, (r.data[k + 1] * al + 255 * o) / 255, (r.data[k + 2] * al + 255 * o) / 255]; };
       for (const fx of [0.12, 0.3, 0.5, 0.7, 0.88]) for (const fy of [0.25, 0.5, 0.75]) {
         const x = g.x0 + fx * (g.x1 - g.x0), y = g.y0 + fy * (g.y1 - g.y0); let col = null;
         for (let k = pg.fills.length - 1; k >= 0; k--) { const f = pg.fills[k]; if (x > f.x0 && x < f.x1 && y > f.y0 && y < f.y1) { col = f.color; break; } }
