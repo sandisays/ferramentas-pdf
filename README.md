@@ -18,6 +18,19 @@ A conversão acontece no seu computador. A página bloqueia qualquer conexão de
 
 ## Código
 
-`src/` tem o motor de conversão (`engine.js`), o modelo da página (`template.html`) e o script que monta o `index.html` com as bibliotecas embutidas (pdf.js, JSZip, pdf-lib e Tesseract.js com o idioma português).
+`src/` tem o motor de conversão (`engine.js`), o modelo da página (`template.html`) e o script que monta o `index.html` com as bibliotecas embutidas (pdf.js, JSZip, pdf-lib, docx-preview e Tesseract.js com o idioma português).
+
+Para montar e testar:
+
+```
+npm ci            # instala as bibliotecas nas versões fixadas
+npm run build     # gera o index.html e mostra o SHA-256
+npm test          # testes de segurança (precisa de Python com playwright)
+```
+
+- `CHANGELOG.md`: o que mudou em cada versão. A versão aparece no rodapé da página.
+- `SHA256SUMS`: impressão digital do `index.html` publicado, para conferir que a cópia em uso é a original (`sha256sum -c SHA256SUMS`).
+- `LICENCAS-TERCEIROS.md`: bibliotecas embutidas, versões e licenças.
+- `tests/test_seguranca.py`: confere que a página não acessa a rede, não grava dados e que a tarja remove de verdade o texto original.
 
 Desenvolvido por Sandi.

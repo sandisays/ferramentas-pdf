@@ -355,7 +355,7 @@
   </details>
   <footer>
     Arquivo único: guarde este .html no computador ou pen drive e abra com dois cliques (Chrome, Edge ou Firefox).
-    <div class="credit">Desenvolvido por <span>Sandi :)</span><span class="sep">·</span><button type="button" id="privLink">Política de privacidade</button></div>
+    <div class="credit">Desenvolvido por <span>Sandi :)</span><span class="sep">·</span><span id="appVersion">versão __VERSION__</span><span class="sep">·</span><button type="button" id="privLink">Política de privacidade</button></div>
   </footer>
   <dialog id="cmpDlg" aria-labelledby="cmpTitle">
     <div class="cmphd"><h2 id="cmpTitle">Comparar</h2><span class="lg" id="cmpInfo">PDF original à esquerda, Word convertido à direita. As duas colunas rolam juntas.</span><button type="button" class="btn ghost" id="cmpClose">Fechar</button></div>
@@ -1208,8 +1208,13 @@
           var np = out.insertPage(idx, [it.W, it.H]); out.removePage(idx + 1); np.drawImage(img, { x: 0, y: 0, width: it.W, height: it.H });
           if (ocr) { if (!font) { font = await out.embedFont(P.StandardFonts.Helvetica); enc = makeEnc(font); } try { addTextLayer(np, font, enc, await C.OCR.canvasWords(p.c, p.sc), it.H); } catch (e) {} }
           p.c.width = p.c.height = 0; }
-        if (hide) { out.setTitle(''); out.setAuthor(''); out.setSubject(''); out.setKeywords([]); out.setCreator('Ferramentas PDF'); out.setProducer('Ferramentas PDF'); try { out.catalog.delete(P.PDFName.of('Metadata')); } catch (e) {} }
-        var bytes = await out.save({ useObjectStreams: true });
+        /* removePage não apaga do arquivo o conteúdo da página antiga: ele só some ao copiar as páginas
+           para um documento novo, que leva apenas o que as páginas finais usam (sem a página original,
+           marcadores, anexos nem formulários). */
+        var clean = await P.PDFDocument.create(), cps = await clean.copyPages(out, out.getPageIndices());
+        cps.forEach(function (cp) { clean.addPage(cp); });
+        clean.setTitle(''); clean.setAuthor(''); clean.setSubject(''); clean.setKeywords([]); clean.setCreator('Ferramentas PDF'); clean.setProducer('Ferramentas PDF');
+        var bytes = await clean.save({ useObjectStreams: true });
         showResult(res, 'Pronto: ' + n + (n > 1 ? ' páginas alteradas.' : ' página alterada.') + (hide ? ' Confira antes de enviar.' : ''), [{ name: base(R.name) + tag + '.pdf', data: bytes }], '', '');
       } else {
         var files = [];
