@@ -4,7 +4,7 @@ Página única que roda inteira no navegador, **sem internet e sem enviar arquiv
 
 - **Converter para Word** — PDF em .docx editável, com tabelas de verdade e o mesmo layout.
 - **OCR** — PDF escaneado vira PDF pesquisável (texto invisível sobre a página); no conversor, escaneado vira Word editável.
-- **Tarjar e destacar** — tarja preta que remove de verdade o conteúdo, ou destaque que desfoca o resto da página (PDF ou imagem).
+- **Tarjar e destacar** — tarja preta que remove de verdade o conteúdo, dado fictício (lê o texto e sugere um substituto) e destaque que desfoca o resto da página, com prévia antes de baixar (PDF ou imagem).
 - **Dividir**, **Organizar** (girar, apagar, reordenar), **Imagens → PDF** e **PDF → Imagem**.
 - **Juntar PDFs** — escolha a ordem e as páginas de cada arquivo.
 - **Comprimir PDF** — normal (reduz imagens, mantém o texto) ou forte (páginas viram imagem).
