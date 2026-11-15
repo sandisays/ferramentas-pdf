@@ -8,6 +8,14 @@ Página única que roda inteira no navegador, **sem internet e sem enviar arquiv
 - **Dividir**, **Organizar** (girar, apagar, reordenar), **Imagens → PDF** e **PDF → Imagem**.
 - **Juntar PDFs** — escolha a ordem e as páginas de cada arquivo.
 - **Comprimir PDF** — normal (reduz imagens, mantém o texto) ou forte (páginas viram imagem).
+- **PDF → Excel** — cada tabela do PDF vira uma aba da planilha (.xlsx), com células mescladas e números de verdade.
+- **Numerar e carimbar** — "Página 1 de N" e carimbo de texto (por exemplo, CÓPIA) na diagonal, em cima ou embaixo.
+- **Comparar PDFs** — mostra, palavra por palavra, o que saiu e o que entrou entre duas versões.
+- **Assinar / imagem** — rubrica desenhada ou imagem posicionada nas páginas (não é assinatura digital com certificado).
+- **Preencher formulário** — preenche os campos de um PDF de formulário, com opção de fixar.
+- **Senha** — protege com AES-256 ou remove a senha (sabendo a senha).
+- **Informações** — páginas, tamanho da folha, se é escaneado, bloqueios, campos e metadados, com opção de limpar os metadados.
+- **Ler e gerar QR Code** — lê de PDF, foto ou print; gera PNG ou SVG.
 
 ## Como usar
 

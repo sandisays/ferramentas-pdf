@@ -43,6 +43,8 @@ for chave, caminho in [
     ('JSZIP', os.path.join(NM, 'jszip/dist/jszip.min.js')),
     ('DOCXPREV', os.path.join(NM, 'docx-preview/dist/docx-preview.min.js')),
     ('JSQR', os.path.join(NM, 'jsqr/dist/jsQR.js')),
+    ('QRGEN', os.path.join(NM, 'qrcode-generator/dist/qrcode.js')),
+    ('QPDF', os.path.join(NM, '@neslinesli93/qpdf-wasm/dist/qpdf.js')),
     ('PDFLIB', os.path.join(NM, 'pdf-lib/dist/pdf-lib.min.js')),
     ('TESS', os.path.join(NM, 'tesseract.js/dist/tesseract.min.js')),
     ('TESSWORKER', os.path.join(NM, 'tesseract.js/dist/worker.min.js')),
@@ -55,6 +57,8 @@ t = t.replace('/*__PDFJS__*/', modulo_como_script(os.path.join(NM, 'pdfjs-dist/l
 t = t.replace('/*__WORKER__*/', modulo_como_script(os.path.join(NM, 'pdfjs-dist/legacy/build/pdf.worker.min.mjs'), 'pdfjsWorker'))
 
 t = t.replace('__DICT__', ler(SRC, 'dict.b64'))
+with open(os.path.join(NM, '@neslinesli93/qpdf-wasm/dist/qpdf.wasm'), 'rb') as fq:
+    t = t.replace('/*__QPDFWASM__*/', base64.b64encode(fq.read()).decode())
 lang = open(os.path.join(NM, '@tesseract.js-data/por/4.0.0_best_int/por.traineddata.gz'), 'rb').read()
 t = t.replace('/*__TESSLANG__*/', 'self.__TL={por:"' + base64.b64encode(lang).decode() + '"};')
 for peso in ('600', '700'):

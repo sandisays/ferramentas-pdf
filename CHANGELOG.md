@@ -1,5 +1,20 @@
 # Registro de mudanças
 
+## 1.5.0 — 15/11/2026
+
+Novas ferramentas
+- **PDF → Excel:** usa o mesmo reconhecimento do conversor para Word; cada tabela vira uma aba, com células mescladas. Números no formato brasileiro (1.234,56) viram número; códigos e lotes com zero na frente ficam como texto.
+- **Numerar e carimbar:** número de página em 5 formatos e 6 posições, começando em qualquer número e opção de pular a 1ª página; carimbo de texto na diagonal (marca d'água, com transparência), em cima ou embaixo, em 4 cores; pode valer só para algumas páginas.
+- **Comparar PDFs:** compara o texto palavra por palavra (algoritmo de Myers) e marca em vermelho o que saiu e em verde o que entrou, lado a lado, com lista clicável das diferenças.
+- **Assinar / imagem:** rubrica desenhada com o mouse ou imagem (com remoção do fundo branco), posicionada arrastando sobre as páginas; botão para repetir a mesma posição em todas.
+- **Preencher formulário:** lista e preenche campos de texto, caixas, listas e opções; opção de fixar o formulário.
+- **Senha:** protege com AES-256 ou remove a senha, usando o qpdf 12 em WebAssembly embutido (@neslinesli93/qpdf-wasm 0.3.1); o .wasm é entregue ao qpdf sem passar pela rede.
+- **Informações:** páginas, tamanho da folha, se é escaneado, senha e bloqueios, campos de formulário e metadados; botão para limpar metadados (Info, XMP e PieceInfo).
+- **Gerar QR Code:** texto ou link (com acentos) em PNG ou SVG, com escolha de correção de erro e tamanho (qrcode-generator 2.0.4).
+
+Página inicial
+- Ferramentas agrupadas em 4 colunas (Converter, Organizar, Revisar e assinar, Segurança e QR), botões compactos e a descrição da ferramenta escolhida embaixo do menu.
+
 ## 1.4.1 — 15/11/2026
 
 Correção

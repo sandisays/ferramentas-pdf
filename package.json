@@ -1,6 +1,6 @@
 {
   "name": "ferramentas-pdf",
-  "version": "1.4.1",
+  "version": "1.5.0",
   "private": true,
   "description": "Ferramentas de PDF em página única, offline, sem envio de arquivos.",
   "scripts": {
@@ -9,12 +9,14 @@
   },
   "dependencies": {
     "@fontsource/fredoka": "5.3.0",
+    "@neslinesli93/qpdf-wasm": "0.3.1",
     "@tesseract.js-data/por": "1.0.0",
     "docx-preview": "0.3.7",
     "jsqr": "1.4.0",
     "jszip": "3.10.2",
     "pdf-lib": "1.17.1",
     "pdfjs-dist": "4.10.38",
+    "qrcode-generator": "2.0.4",
     "tesseract.js": "7.0.0",
     "tesseract.js-core": "6.1.2"
   }
