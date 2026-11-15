@@ -15,6 +15,8 @@ Página única que roda inteira no navegador, **sem internet e sem enviar arquiv
 - **Preencher formulário** — preenche os campos de um PDF de formulário, com opção de fixar.
 - **Senha** — protege com AES-256 ou remove a senha (sabendo a senha).
 - **Informações** — páginas, tamanho da folha, se é escaneado, bloqueios, campos e metadados, com opção de limpar os metadados.
+- **Melhorar digitalização** — endireita, limpa bordas, realça contraste, preto e branco, tira páginas em branco e OCR opcional.
+- **Livreto** — imprimir dobrado ao meio ou 2, 4, 6, 9 páginas por folha.
 - **Ler e gerar QR Code** — lê de PDF, foto ou print; gera PNG ou SVG.
 
 ## Como usar

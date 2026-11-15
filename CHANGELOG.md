@@ -1,5 +1,11 @@
 # Registro de mudanças
 
+## 1.6.0 — 15/11/2026
+
+Novas ferramentas
+- **Melhorar digitalização:** para PDF escaneado ou fotos. Endireita páginas tortas (perfil de projeção no miolo da página), pinta de branco a sombra e os cantos pretos ligados à borda, realça o contraste, deixa em cinza ou preto e branco (limiar adaptativo de Sauvola), tira páginas em branco e pode deixar o texto pesquisável (OCR). Mostra antes e depois da 1ª página.
+- **Livreto:** monta o PDF para imprimir dobrado ao meio (completa com páginas em branco até múltiplo de 4) ou com 2, 4, 6 ou 9 páginas por folha, em A4 ou A3, com linha opcional de dobra ou corte. Respeita páginas giradas.
+
 ## 1.5.0 — 15/11/2026
 
 Novas ferramentas

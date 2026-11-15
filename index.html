@@ -103,6 +103,7 @@
   .qgr canvas { width:100%; max-width:300px; height:auto; image-rendering:pixelated; border:1px solid var(--line); border-radius:12px; background:#fff; } #qg_err:empty { display:none; }
   .pwrow { display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap; margin-top:12px; } .pwrow label { display:flex; flex-direction:column; gap:4px; font-size:13px; color:var(--mute); font-weight:600; }
   .infobox { grid-column:1 / -1; } .infotab { border-collapse:collapse; font-size:13.5px; margin-top:4px; width:100%; } .infotab th { text-align:left; color:var(--mute); font-weight:600; padding:3px 14px 3px 0; white-space:nowrap; vertical-align:top; width:1%; } .infotab td { padding:3px 0; word-break:break-word; }
+  .scanprev { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:14px; } .scanprev figure { margin:0; display:flex; flex-direction:column; align-items:center; gap:6px; } .scanprev figcaption { font-size:12.5px; color:var(--mute); font-weight:600; } .scanprev canvas { max-width:100%; height:auto; box-shadow:0 1px 6px rgba(0,0,0,.25); }
   .credit .sep { color:var(--mute); margin:0 6px; font-weight:400; }
   #privLink { background:none; border:0; padding:0; font:inherit; font-weight:600; color:var(--acc); cursor:pointer; text-decoration:underline; text-underline-offset:3px; }
   #cmpDlg { width:calc(100% - 24px); max-width:1500px; height:calc(100% - 24px); max-height:none; border:1px solid var(--line); border-radius:16px; background:var(--card); color:var(--ink); padding:0; box-shadow:var(--shadow); }
@@ -213,6 +214,7 @@
       <div class="tg" role="presentation">Converter</div>
       <button role="tab" data-tab="conv" aria-selected="true"><span class="ti"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13l1.5 4 1.5-3 1.5 3 1.5-4"/></svg></span><span class="tt"><b>Para Word</b><small>PDF em .docx editável</small></span></button>
       <button role="tab" data-tab="ocr" aria-selected="false"><span class="ti"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M8 9h8M8 12h8M8 15h5"/></svg></span><span class="tt"><b>OCR</b><small>Escaneado pesquisável</small></span></button>
+      <button role="tab" data-tab="scan" aria-selected="false"><span class="ti"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V5a1 1 0 0 1 1-1h2M17 4h2a1 1 0 0 1 1 1v2M20 17v2a1 1 0 0 1-1 1h-2M7 20H5a1 1 0 0 1-1-1v-2"/><path d="m9 12 2 2 4-4"/></svg></span><span class="tt"><b>Melhorar digitalização</b><small>Endireitar, limpar e realçar</small></span></button>
       <button role="tab" data-tab="xls" aria-selected="false"><span class="ti"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg></span><span class="tt"><b>PDF → Excel</b><small>Tabelas em planilha</small></span></button>
       <button role="tab" data-tab="img2pdf" aria-selected="false"><span class="ti"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/></svg></span><span class="tt"><b>Imagens → PDF</b><small>Fotos e prints em PDF</small></span></button>
       <button role="tab" data-tab="pdf2img" aria-selected="false"><span class="ti"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><circle cx="10" cy="12" r="1.5"/><path d="m17 18-3-3-5 5"/></svg></span><span class="tt"><b>PDF → Imagem</b><small>Páginas em JPG ou PNG</small></span></button>
@@ -224,6 +226,7 @@
       <button role="tab" data-tab="org" aria-selected="false"><span class="ti"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M14 17.5h7M17.5 14v7"/></svg></span><span class="tt"><b>Organizar</b><small>Girar, apagar, reordenar</small></span></button>
       <button role="tab" data-tab="comp" aria-selected="false"><span class="ti"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"/></svg></span><span class="tt"><b>Comprimir</b><small>Reduzir o tamanho</small></span></button>
       <button role="tab" data-tab="num" aria-selected="false"><span class="ti"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h16M4 15h16M10 3 8 21M16 3l-2 18"/></svg></span><span class="tt"><b>Numerar e carimbar</b><small>Página 1 de N, CÓPIA…</small></span></button>
+      <button role="tab" data-tab="book" aria-selected="false"><span class="ti"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6c-2-1.5-5-2-8-2v14c3 0 6 .5 8 2 2-1.5 5-2 8-2V4c-3 0-6 .5-8 2z"/><path d="M12 6v14"/></svg></span><span class="tt"><b>Livreto</b><small>Imprimir dobrado ou 2, 4 por folha</small></span></button>
     </div>
     <div class="tgrp" role="presentation">
       <div class="tg" role="presentation">Revisar e assinar</div>
@@ -536,6 +539,44 @@
     <ul id="list_info" class="flist"></ul>
   </section>
 
+  <section class="panel" data-panel="scan" hidden>
+    <div id="drop_scan" class="drop" tabindex="0" role="button" aria-label="Escolher arquivo">
+      <div class="dropicon"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4"/><path d="m7 9 5-5 5 5"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg></div>
+      <strong>Arraste o PDF escaneado ou as fotos</strong>
+      <span>Endireita páginas tortas, tira a sombra das bordas, realça o contraste e pode deixar em preto e branco</span><br>
+      <span class="pick">Escolher arquivos</span>
+      <input id="file_scan" type="file" accept="application/pdf,.pdf,image/*" multiple hidden>
+    </div>
+    <div class="formgrid">
+      <label class="tgt"><input type="checkbox" id="scan_deskew" checked> Endireitar páginas tortas</label>
+      <label class="tgt"><input type="checkbox" id="scan_border" checked> Limpar a sombra escura das bordas</label>
+      <label class="tgt"><input type="checkbox" id="scan_contrast" checked> Realçar o contraste (fundo branco, texto escuro)</label>
+      <label class="tgt">Cores <select id="scan_color"><option value="color">Manter as cores</option><option value="gray">Tons de cinza (arquivo menor)</option><option value="bw" selected>Preto e branco (o menor e mais nítido para texto)</option></select></label>
+      <label class="tgt"><input type="checkbox" id="scan_blank" checked> Tirar páginas em branco</label>
+      <label class="tgt"><input type="checkbox" id="scan_ocr"> Deixar o texto pesquisável (OCR) <small>· mais demorado</small></label>
+    </div>
+    <div class="scanprev" id="prev_scan" hidden></div>
+    <div class="row"><span class="note">A prévia mostra a 1ª página. Fotos e prints viram páginas de um PDF.</span><button class="btn" id="go_scan" disabled>Melhorar e baixar</button></div>
+    <div id="res_scan" class="res"></div>
+  </section>
+  <section class="panel" data-panel="book" hidden>
+    <div id="drop_book" class="drop" tabindex="0" role="button" aria-label="Escolher arquivo">
+      <div class="dropicon"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4"/><path d="m7 9 5-5 5 5"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg></div>
+      <strong>Arraste o PDF</strong>
+      <span>Organiza as páginas para imprimir como livreto ou várias por folha</span><br>
+      <span class="pick">Escolher arquivo</span>
+      <input id="file_book" type="file" accept="application/pdf,.pdf" hidden>
+    </div>
+    <div class="formgrid">
+      <label class="tgt">Formato <select id="book_mode"><option value="book">Livreto (dobrar ao meio e grampear)</option><option value="2">2 páginas por folha</option><option value="4">4 páginas por folha</option><option value="6">6 páginas por folha</option><option value="9">9 páginas por folha</option></select></label>
+      <label class="tgt">Papel <select id="book_paper"><option value="A4">A4</option><option value="A3">A3 (no livreto, cada página fica do tamanho A4)</option></select></label>
+      <label class="tgt"><input type="checkbox" id="book_lines"> Linha pontilhada de dobra ou corte</label>
+    </div>
+    <p class="note" id="book_info"></p>
+    <div class="row"><span></span><button class="btn" id="go_book" disabled>Montar e baixar</button></div>
+    <div id="res_book" class="res"></div>
+  </section>
+
   <details data-only="conv">
     <summary>O que este conversor faz e o que não faz</summary>
     <ul>
@@ -548,7 +589,7 @@
   </details>
   <footer>
     Arquivo único: guarde este .html no computador ou pen drive e abra com dois cliques (Chrome, Edge ou Firefox).
-    <div class="credit">Desenvolvido por <span>Sandi :)</span><span class="sep">·</span><span id="appVersion">versão 1.5.0</span><span class="sep">·</span><button type="button" id="privLink">Política de privacidade</button></div>
+    <div class="credit">Desenvolvido por <span>Sandi :)</span><span class="sep">·</span><span id="appVersion">versão 1.6.0</span><span class="sep">·</span><button type="button" id="privLink">Política de privacidade</button></div>
   </footer>
   <dialog id="cmpDlg" aria-labelledby="cmpTitle">
     <div class="cmphd"><h2 id="cmpTitle">Comparar</h2><span class="lg" id="cmpInfo">PDF original à esquerda, Word convertido à direita. As duas colunas rolam juntas.</span><button type="button" class="btn ghost" id="cmpClose">Fechar</button></div>
@@ -14965,7 +15006,7 @@ if (typeof module !== 'undefined') module.exports = createPdf2Docx;
     d.onkeydown = function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); f.click(); } };
     f.onchange = function () { fn(f.files); f.value = ''; }; C.adders[key] = fn; }
   function isImg(f) { return /^image\//.test(f.type) || /\.(jpe?g|png|webp|gif|bmp)$/i.test(f.name); }
-  window.__s3 = { wire2: function (k, fn) { return wire2(k, fn); }, pdfjsDoc: function (b) { return pdfjsDoc(b); }, renderCanvas: function (p, s) { return renderCanvas(p, s); }, capScale: function (p, d, m) { return capScale(p, d, m); }, isImg: isImg };
+  window.__s3 = { wire2: function (k, fn) { return wire2(k, fn); }, pdfjsDoc: function (b) { return pdfjsDoc(b); }, renderCanvas: function (p, s) { return renderCanvas(p, s); }, capScale: function (p, d, m) { return capScale(p, d, m); }, isImg: isImg, makeEnc: function (f) { return makeEnc(f); }, addTextLayer: function (a, b, c, d, e) { return addTextLayer(a, b, c, d, e); } };
   function base(n) { return n.replace(/\.[^.]+$/, ''); }
   function blobBytes(c, type, q) { return new Promise(function (res, rej) { c.toBlob(function (b) { if (!b) return rej(new Error('imagem grande demais para o navegador')); b.arrayBuffer().then(function (a) { res(new Uint8Array(a)); }); }, type, q); }); }
   function pdfjsDoc(bytes) { return pdfjsLib.getDocument({ data: bytes.slice(), isEvalSupported: false }).promise; }
@@ -15809,6 +15850,132 @@ if (typeof module !== 'undefined') module.exports = createPdf2Docx;
     try { da && da.destroy(); db && db.destroy(); } catch (e) {} btn.disabled = false; };
 })();
 </script>
+<script>
+/* ================= MELHORAR DIGITALIZAÇÃO e LIVRETO ================= */
+(function () {
+  'use strict';
+  var C = window.__ctx, H = window.__h, $ = C.$, P = PDFLib, el = H.el, kb = H.kb, S = window.__s3;
+  function base(n) { return (n || 'arquivo').replace(/\.[^.]+$/, ''); }
+  function msg(box, t, cls) { box.innerHTML = ''; var p = el('div', 'st ' + (cls || '')); p.textContent = t; box.appendChild(p); return p; }
+  function pick(d, f, extra) { var s = d.querySelector('.dname'); if (!s) { s = el('div', 'dname'); d.appendChild(s); } s.textContent = f.name + ' · ' + kb(f.size) + (extra || ''); d.classList.add('has'); }
+
+  /* ---------- MELHORAR DIGITALIZAÇÃO ---------- */
+  var SC = { files: [], kind: null, pdf: null };
+  S.wire2('scan', async function (files) { var fs = Array.prototype.slice.call(files), pdf = fs.filter(H.isPdf)[0], imgs = fs.filter(S.isImg); $('res_scan').innerHTML = '';
+    if (SC.pdf) try { SC.pdf.destroy(); } catch (e) {} SC.pdf = null;
+    if (pdf) { SC.kind = 'pdf'; SC.files = [pdf]; SC.pdf = await S.pdfjsDoc(new Uint8Array(await pdf.arrayBuffer())); pick($('drop_scan'), pdf, ' · ' + SC.pdf.numPages + ' páginas'); }
+    else if (imgs.length) { SC.kind = 'img'; SC.files = imgs; pick($('drop_scan'), imgs[0], imgs.length > 1 ? ' e mais ' + (imgs.length - 1) : ''); }
+    else return msg($('res_scan'), 'Use um PDF ou imagens.', 'err');
+    $('go_scan').disabled = false; preview(); }); C.drops.scan = $('drop_scan');
+  ['scan_deskew', 'scan_border', 'scan_contrast', 'scan_color'].forEach(function (id) { $(id).addEventListener('change', function () { if (SC.kind) preview(); }); });
+  async function source(i, dpi) { // canvas da página i (0..), já em pixels
+    if (SC.kind === 'pdf') { var pg = await SC.pdf.getPage(i + 1), v = pg.getViewport({ scale: 1 }), c = await S.renderCanvas(pg, S.capScale(pg, dpi, 4200)); pg.cleanup(); return { c: c, W: v.width, H: v.height }; }
+    var bmp = await createImageBitmap(SC.files[i]), s = Math.min(1, 4200 / Math.max(bmp.width, bmp.height)), c2 = document.createElement('canvas'); c2.width = Math.round(bmp.width * s); c2.height = Math.round(bmp.height * s);
+    var x = c2.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c2.width, c2.height); x.drawImage(bmp, 0, 0, c2.width, c2.height); bmp.close();
+    var a4 = c2.width > c2.height ? [842, 595] : [595, 842], k = Math.min(a4[0] / c2.width, a4[1] / c2.height); return { c: c2, W: c2.width * k, H: c2.height * k }; }
+  function count() { return SC.kind === 'pdf' ? SC.pdf.numPages : SC.files.length; }
+  function gray(c) { var x = c.getContext('2d', { willReadFrequently: true }), d = x.getImageData(0, 0, c.width, c.height), g = new Uint8ClampedArray(c.width * c.height), p = d.data;
+    for (var i = 0, k = 0; k < g.length; i += 4, k++) g[k] = (p[i] * 77 + p[i + 1] * 150 + p[i + 2] * 29) >> 8; return { img: d, g: g, W: c.width, H: c.height }; }
+  function skewAngle(G) { // ângulo em que as linhas de texto ficam mais "retas" (perfil de projeção mais concentrado)
+    var f = Math.max(1, Math.round(G.W / 700)), w = Math.floor(G.W / f), h = Math.floor(G.H / f), b = new Uint8Array(w * h), n = 0;
+    var mx0 = Math.floor(w * 0.06), mx1 = w - mx0, my0 = Math.floor(h * 0.05), my1 = h - my0, lvl = levels(G), cut = 140;
+    if (lvl) { cut = 0; while (cut < 255 && lvl[cut] < 110) cut++; }
+    for (var y = my0; y < my1; y++) for (var x = mx0; x < mx1; x++) { var v = G.g[(y * f) * G.W + x * f]; if (v < cut) { b[y * w + x] = 1; n++; } }
+    if (n < w * h * 0.002 || n > w * h * 0.5) return 0;
+    var score = function (deg) { var t = Math.tan(deg * Math.PI / 180), rows = new Float64Array(h + w), s = 0; for (var y = 0; y < h; y++) for (var x = 0; x < w; x++) if (b[y * w + x]) { var r = Math.round(y - x * t) + w; if (r >= 0 && r < rows.length) rows[r]++; }
+      for (var i = 0; i < rows.length; i++) s += rows[i] * rows[i]; return s; };
+    var best = 0, bs = score(0); for (var d = -6; d <= 6.001; d += 0.5) { var s = score(d); if (s > bs) { bs = s; best = d; } }
+    for (var d2 = best - 0.4; d2 <= best + 0.401; d2 += 0.1) { var s2 = score(d2); if (s2 > bs) { bs = s2; best = d2; } }
+    return Math.abs(best) < 0.15 ? 0 : best; }
+  function rotateCanvas(c, deg) { var r = deg * Math.PI / 180, o = document.createElement('canvas'); o.width = c.width; o.height = c.height; var x = o.getContext('2d');
+    x.fillStyle = '#fff'; x.fillRect(0, 0, o.width, o.height); x.translate(o.width / 2, o.height / 2); x.rotate(-r); x.drawImage(c, -c.width / 2, -c.height / 2); return o; }
+  function levels(G) { var h = new Uint32Array(256), N = G.g.length; for (var i = 0; i < N; i++) h[G.g[i]]++; var lo = 0, hi = 255, a = 0;
+    for (; lo < 255; lo++) { a += h[lo]; if (a > N * 0.01) break; } a = 0; for (; hi > 0; hi--) { a += h[hi]; if (a > N * 0.04) break; }
+    if (hi - lo < 40) return null; var lut = new Uint8ClampedArray(256); for (var v = 0; v < 256; v++) lut[v] = Math.max(0, Math.min(255, (v - lo) * 255 / (hi - lo))); return lut; }
+  function edgeDark(c) { // pinta de branco as áreas escuras ligadas à borda da imagem (sombra e cantos pretos do scanner)
+    var G = gray(c), W = G.W, Hh = G.H, f = 2, w = Math.ceil(W / f), h = Math.ceil(Hh / f), dark = new Uint8Array(w * h), seen = new Uint8Array(w * h), st = [];
+    for (var y = 0; y < h; y++) for (var x = 0; x < w; x++) dark[y * w + x] = G.g[Math.min(Hh - 1, y * f) * W + Math.min(W - 1, x * f)] < 105 ? 1 : 0;
+    var push = function (i) { if (dark[i] && !seen[i]) { seen[i] = 1; st.push(i); } };
+    for (var x2 = 0; x2 < w; x2++) { push(x2); push((h - 1) * w + x2); } for (var y2 = 0; y2 < h; y2++) { push(y2 * w); push(y2 * w + w - 1); }
+    var n = 0; while (st.length) { var i = st.pop(), xx = i % w, yy = (i - xx) / w; n++; if (xx > 0) push(i - 1); if (xx < w - 1) push(i + 1); if (yy > 0) push(i - w); if (yy < h - 1) push(i + w); }
+    if (!n || n > w * h * 0.6) return; var d = G.img.data;
+    for (var yy2 = 0; yy2 < Hh; yy2++) for (var xx2 = 0; xx2 < W; xx2++) { var k = Math.floor(yy2 / f) * w + Math.floor(xx2 / f), q = k % w, r = (k - q) / w, hit = seen[k] || (q > 0 && seen[k - 1]) || (q < w - 1 && seen[k + 1]) || (r > 0 && seen[k - w]) || (r < h - 1 && seen[k + w]);
+      if (hit) { var p = (yy2 * W + xx2) * 4; d[p] = d[p + 1] = d[p + 2] = 255; } }
+    c.getContext('2d').putImageData(G.img, 0, 0); }
+  function sauvola(G, out) { // preto e branco que se adapta à iluminação da página (média e variação da vizinhança)
+    var W = G.W, Hh = G.H, S1 = new Float64Array((W + 1) * (Hh + 1)), S2 = new Float64Array((W + 1) * (Hh + 1)), r = Math.max(8, Math.round(Math.min(W, Hh) / 60));
+    for (var y = 1; y <= Hh; y++) { var a = 0, b = 0; for (var x = 1; x <= W; x++) { var v = G.g[(y - 1) * W + x - 1]; a += v; b += v * v; S1[y * (W + 1) + x] = S1[(y - 1) * (W + 1) + x] + a; S2[y * (W + 1) + x] = S2[(y - 1) * (W + 1) + x] + b; } }
+    for (var y2 = 0; y2 < Hh; y2++) { var y0 = Math.max(0, y2 - r), y1 = Math.min(Hh, y2 + r + 1); for (var x2 = 0; x2 < W; x2++) { var x0 = Math.max(0, x2 - r), x1 = Math.min(W, x2 + r + 1), n = (y1 - y0) * (x1 - x0);
+      var s1 = S1[y1 * (W + 1) + x1] - S1[y0 * (W + 1) + x1] - S1[y1 * (W + 1) + x0] + S1[y0 * (W + 1) + x0], s2 = S2[y1 * (W + 1) + x1] - S2[y0 * (W + 1) + x1] - S2[y1 * (W + 1) + x0] + S2[y0 * (W + 1) + x0];
+      var m = s1 / n, sd = Math.sqrt(Math.max(0, s2 / n - m * m)), th = m * (1 + 0.2 * (sd / 128 - 1)); out[y2 * W + x2] = G.g[y2 * W + x2] > th ? 255 : 0; } } }
+  function process(c, o) { // devolve { c, blank, angle }
+    if (o.border) edgeDark(c);
+    if (o.deskew) { var g0 = gray(c), ang = skewAngle(g0); if (ang) { c = rotateCanvas(c, ang); if (o.border) edgeDark(c); } }
+    var G = gray(c), x = c.getContext('2d'), d = G.img.data, N = G.g.length, lut = o.contrast ? levels(G) : null, out = null;
+    if (o.color === 'bw') { if (lut) for (var i = 0; i < N; i++) G.g[i] = lut[G.g[i]]; out = new Uint8ClampedArray(N); sauvola(G, out); }
+    var W = G.W, ink = 0;
+    for (var k = 0, p = 0; k < N; k++, p += 4) {
+      if (out) { d[p] = d[p + 1] = d[p + 2] = out[k]; if (!out[k]) ink++; continue; }
+      if (o.color === 'gray') { var gv = lut ? lut[G.g[k]] : G.g[k]; d[p] = d[p + 1] = d[p + 2] = gv; if (gv < 128) ink++; continue; }
+      if (lut) { d[p] = lut[d[p]]; d[p + 1] = lut[d[p + 1]]; d[p + 2] = lut[d[p + 2]]; } if (G.g[k] < 128) ink++; }
+    x.putImageData(G.img, 0, 0); return { c: c, blank: ink / N < 0.0015, angle: ang || 0 }; }
+  function opts() { return { deskew: $('scan_deskew').checked, border: $('scan_border').checked, contrast: $('scan_contrast').checked, color: $('scan_color').value, blank: $('scan_blank').checked, ocr: $('scan_ocr').checked }; }
+  var pvTok = 0;
+  async function preview() { var tok = ++pvTok, box = $('prev_scan'); box.hidden = false; box.innerHTML = '<p class="note">Montando a prévia da 1ª página…</p>';
+    try { var s = await source(0, 110), a = document.createElement('canvas'); a.width = s.c.width; a.height = s.c.height; a.getContext('2d').drawImage(s.c, 0, 0);
+      var r = process(s.c, opts()); if (tok !== pvTok) return; box.innerHTML = '';
+      [['Antes', a], ['Depois' + (r.angle ? ' (endireitada ' + r.angle.toFixed(1).replace('.', ',') + '°)' : ''), r.c]].forEach(function (q) { var f = el('figure'), cap = el('figcaption'); cap.textContent = q[0]; q[1].className = 'cmppage'; f.appendChild(q[1]); f.appendChild(cap); box.appendChild(f); });
+    } catch (e) { box.innerHTML = ''; msg(box, H.errMsg(e), 'err'); } }
+  $('go_scan').onclick = async function () { var res = $('res_scan'), btn = this, o = opts(), N = count(); btn.disabled = true;
+    try { var out = await P.PDFDocument.create(), font = null, enc = null, removed = [], dpi = o.color === 'bw' ? 200 : 150;
+      for (var i = 0; i < N; i++) { msg(res, 'Página ' + (i + 1) + ' de ' + N + (o.ocr ? ' (melhorando e lendo o texto)…' : '…'));
+        var s = await source(i, dpi), r = process(s.c, o);
+        if (o.blank && r.blank && N > 1) { removed.push(i + 1); r.c.width = r.c.height = 0; continue; }
+        var enc2 = function (type, q) { return new Promise(function (ok, no) { r.c.toBlob(function (b) { if (!b) return no(new Error('imagem grande demais')); b.arrayBuffer().then(function (a) { ok(new Uint8Array(a)); }); }, type, q); }); };
+        var jpg = await enc2('image/jpeg', o.color === 'color' ? 0.72 : o.color === 'gray' ? 0.68 : 0.6), img;
+        if (o.color === 'bw') { var png = await enc2('image/png'); img = png.length < jpg.length * 1.15 ? await out.embedPng(png) : await out.embedJpg(jpg); } else img = await out.embedJpg(jpg);
+        var pg = out.addPage([s.W, s.H]); pg.drawImage(img, { x: 0, y: 0, width: s.W, height: s.H });
+        if (o.ocr) { if (!font) { font = await out.embedFont(P.StandardFonts.Helvetica); enc = S.makeEnc(font); } try { S.addTextLayer(pg, font, enc, await C.OCR.canvasWords(r.c, r.c.width / s.W), s.H); } catch (e) {} }
+        r.c.width = r.c.height = 0; await new Promise(function (ok) { setTimeout(ok, 0); }); }
+      if (!out.getPageCount()) throw new Error('Todas as páginas pareciam em branco.');
+      var bytes = await out.save(), orig = SC.kind === 'pdf' ? SC.files[0].size : SC.files.reduce(function (a, f) { return a + f.size; }, 0);
+      msg(res, 'Pronto: ' + out.getPageCount() + ' páginas, ' + kb(bytes.length) + ' (antes ' + kb(orig) + ').' + (removed.length ? ' Páginas em branco removidas: ' + removed.join(', ') + '.' : '') + (o.ocr ? ' Texto pesquisável incluído.' : ''), 'ok');
+      var b = el('button', 'btn', 'Baixar PDF'); b.onclick = function () { C.save(base(SC.files[0].name) + ' (melhorado).pdf', bytes, 'application/pdf'); }; res.appendChild(b);
+    } catch (e) { msg(res, H.errMsg(e), 'err'); } btn.disabled = false; };
+
+  /* ---------- LIVRETO E PÁGINAS POR FOLHA ---------- */
+  var fB = null, nB = 0;
+  S.wire2('book', async function (files) { var f = Array.prototype.filter.call(files, H.isPdf)[0]; if (!f) return msg($('res_book'), 'Escolha um PDF.', 'err');
+    fB = f; try { var d = await P.PDFDocument.load(new Uint8Array(await f.arrayBuffer()), { updateMetadata: false }); nB = d.getPageCount(); } catch (e) { return msg($('res_book'), H.errMsg(e), 'err'); }
+    pick($('drop_book'), f, ' · ' + nB + ' páginas'); $('go_book').disabled = false; bookInfo(); }); C.drops.book = $('drop_book');
+  ['book_mode', 'book_paper'].forEach(function (id) { $(id).addEventListener('change', bookInfo); });
+  function bookInfo() { var m = $('book_mode').value, t = $('book_info'); if (!nB) { t.textContent = ''; return; }
+    if (m === 'book') { var n4 = Math.ceil(nB / 4) * 4; t.textContent = nB + ' páginas → ' + n4 / 4 + (n4 / 4 > 1 ? ' folhas' : ' folha') + ' (frente e verso)' + (n4 > nB ? ', com ' + (n4 - nB) + (n4 - nB > 1 ? ' páginas em branco no fim' : ' página em branco no fim') : '') + '. Imprima frente e verso virando pela borda curta, dobre ao meio e grampeie no meio.'; }
+    else { var k = +m, f = Math.ceil(nB / k); t.textContent = nB + ' páginas → ' + f + (f > 1 ? ' folhas' : ' folha') + ' com ' + k + ' páginas cada.'; } }
+  function placeEmb(sheet, emb, rot, bx, by, bw, bh) { // desenha a página (com a rotação dela) dentro da caixa, centralizada
+    var w = emb.width, h = emb.height, vw = rot % 180 ? h : w, vh = rot % 180 ? w : h, s = Math.min(bw / vw, bh / vh), X = bx + (bw - vw * s) / 2, Y = by + (bh - vh * s) / 2, x = X, y = Y;
+    if (rot === 90) { y = Y + w * s; } else if (rot === 180) { x = X + w * s; y = Y + h * s; } else if (rot === 270) { x = X + h * s; }
+    sheet.drawPage(emb, { x: x, y: y, xScale: s, yScale: s, rotate: P.degrees(-rot) }); }
+  $('go_book').onclick = async function () { var res = $('res_book'), btn = this; btn.disabled = true; msg(res, 'Montando…');
+    try { var src = await P.PDFDocument.load(new Uint8Array(await fB.arrayBuffer()), { updateMetadata: false }), out = await P.PDFDocument.create(), pages = src.getPages();
+      var embs = await out.embedPages(pages), rots = pages.map(function (p) { return ((p.getRotation().angle % 360) + 360) % 360; });
+      var m = $('book_mode').value, paper = $('book_paper').value === 'A3' ? [842, 1191] : [595.28, 841.89], mg = 14, lines = $('book_lines').checked;
+      var line = function (sh, x1, y1, x2, y2) { sh.drawLine({ start: { x: x1, y: y1 }, end: { x: x2, y: y2 }, thickness: 0.4, color: P.rgb(0.6, 0.6, 0.6), dashArray: [3, 3] }); };
+      if (m === 'book') { var n4 = Math.ceil(nB / 4) * 4, W = paper[1], Hh = paper[0], half = W / 2; // folha deitada, duas páginas lado a lado
+        var put = function (sh, idx, left) { if (idx < nB) placeEmb(sh, embs[idx], rots[idx], (left ? 0 : half) + mg, mg, half - mg * 2, Hh - mg * 2); };
+        for (var s = 0; s < n4 / 4; s++) { var fr = out.addPage([W, Hh]); put(fr, n4 - 1 - 2 * s, true); put(fr, 2 * s, false); if (lines) line(fr, half, 6, half, Hh - 6);
+          var bk = out.addPage([W, Hh]); put(bk, 2 * s + 1, true); put(bk, n4 - 2 - 2 * s, false); if (lines) line(bk, half, 6, half, Hh - 6); } }
+      else { var k = +m, grid = { 2: [2, 1], 4: [2, 2], 6: [2, 3], 9: [3, 3] }[k], land = k === 2 || k === 6 ? false : false;
+        var W2 = k === 2 ? paper[1] : paper[0], H2 = k === 2 ? paper[0] : paper[1], cols = k === 6 ? 2 : grid[0], rowsN = k === 6 ? 3 : grid[1], cw = (W2 - mg) / cols, ch = (H2 - mg) / rowsN;
+        for (var i = 0; i < nB; i += k) { var sh = out.addPage([W2, H2]);
+          for (var j = 0; j < k && i + j < nB; j++) { var cI = j % cols, rI = Math.floor(j / cols); placeEmb(sh, embs[i + j], rots[i + j], mg / 2 + cI * cw + mg / 2, H2 - mg / 2 - (rI + 1) * ch + mg / 2, cw - mg, ch - mg); }
+          if (lines) { for (var c2 = 1; c2 < cols; c2++) line(sh, mg / 2 + c2 * cw, 6, mg / 2 + c2 * cw, H2 - 6); for (var r2 = 1; r2 < rowsN; r2++) line(sh, 6, H2 - mg / 2 - r2 * ch, W2 - 6, H2 - mg / 2 - r2 * ch); } } }
+      var bytes = await out.save(); msg(res, 'Pronto: ' + out.getPageCount() + (out.getPageCount() > 1 ? ' páginas para imprimir.' : ' página para imprimir.') + (m === 'book' ? ' Na impressora: frente e verso, virar pela borda curta, tamanho real (sem "ajustar à página").' : ''), 'ok');
+      var b = el('button', 'btn', 'Baixar PDF'); b.onclick = function () { C.save(base(fB.name) + (m === 'book' ? ' (livreto).pdf' : ' (' + m + ' por folha).pdf'), bytes, 'application/pdf'); }; res.appendChild(b);
+    } catch (e) { msg(res, H.errMsg(e), 'err'); } btn.disabled = false; };
+})();
+</script>
+
 
 </body>
 </html>
