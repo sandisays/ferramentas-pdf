@@ -154,6 +154,7 @@
   .subed .sh { display:flex; align-items:center; gap:6px; margin-bottom:5px; min-width:0; } .subed .sh small { margin:0; }
   .nb { display:inline-grid; place-items:center; min-width:20px; height:20px; border-radius:10px; background:#2b6cb0; color:#fff; font-size:11.5px; font-weight:700; padding:0 5px; flex:none; }
   .edp .bx .nb { position:absolute; left:-10px; top:-10px; }
+  .edp .bx .nb.hn { background:#ec602a; min-width:24px; height:24px; border-radius:12px; font-size:13px; left:-12px; top:-12px; box-shadow:0 1px 3px rgba(0,0,0,.35); }
   .subed textarea { width:100%; font:inherit; font-size:13px; border:1px solid var(--line); border-radius:7px; padding:5px 7px; background:var(--soft); color:var(--ink); resize:vertical; }
   .subed small { display:block; font-size:11.5px; color:var(--mute); margin-top:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   #prev_red canvas.pv { display:block; width:100%; height:auto; margin:0 auto; box-shadow:0 2px 10px rgba(0,0,0,.18); }
@@ -266,6 +267,7 @@
     <div class="seg" id="redMode"><button data-m="t" aria-pressed="true">Tarja preta</button><button data-m="s" aria-pressed="false">Dado fictício</button><button data-m="h" aria-pressed="false">Destacar</button></div>
     <p class="note" id="redHelp">Tarja preta: cobre a área de preto. A página alterada vira imagem, então o que estava embaixo some de verdade.</p>
     <p class="note">Escolha o modo e arraste sobre a página. Dá para misturar os três no mesmo documento. Ao baixar com tarja ou dado fictício, título, autor e outros dados do arquivo são apagados.</p>
+    <label class="tgt" id="redNumRow"><input type="checkbox" id="redNum"> Numerar os destaques (1, 2, 3…) na ordem em que você marcar, para montar um passo a passo</label>
     <label class="tgt" id="redOcrRow"><input type="checkbox" id="redOcr" checked> Manter o texto pesquisável (OCR nas páginas alteradas, exceto as com destaque)</label>
     <div class="row" id="actions_red" hidden><h2 id="redCount">Marque as áreas</h2><div><button class="btn ghost" id="clear_red">Limpar</button><button class="btn ghost" id="prevbtn_red">Pré-visualizar</button><button class="btn" id="go_red">Aplicar e baixar</button></div></div>
     <div class="subs" id="subs_red"></div>
@@ -985,7 +987,12 @@
   function setMode(m) { R.mode = m; Array.prototype.forEach.call($('redMode').children, function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-m') === m ? 'true' : 'false'); }); $('redHelp').textContent = HELP[m]; }
   Array.prototype.forEach.call($('redMode').children, function (b) { b.onclick = function () { setMode(b.getAttribute('data-m')); }; });
   function allRects() { return R.items.reduce(function (a, it) { return a.concat(it.rects); }, []); }
-  function countRects() { var a = allRects(), n = a.length, c = { t: 0, s: 0, h: 0 }; a.forEach(function (r) { c[r.m]++; });
+  // passo a passo: os destaques recebem 1, 2, 3… na ordem em que foram marcados (em todas as páginas)
+  function renumber() { var on = $('redNum').checked;
+    allRects().filter(function (r) { return r.m === 'h'; }).sort(function (a, b) { return a.seq - b.seq; })
+      .forEach(function (r, k) { r.num = on ? k + 1 : 0; if (r.hn) { r.hn.textContent = k + 1; r.hn.hidden = !on; } }); }
+  $('redNum').onchange = renumber;
+  function countRects() { renumber(); var a = allRects(), n = a.length, c = { t: 0, s: 0, h: 0 }; a.forEach(function (r) { c[r.m]++; });
     var parts = []; if (c.t) parts.push(c.t + (c.t > 1 ? ' tarjas' : ' tarja')); if (c.s) parts.push(c.s + (c.s > 1 ? ' dados fictícios' : ' dado fictício')); if (c.h) parts.push(c.h + (c.h > 1 ? ' destaques' : ' destaque'));
     $('redCount').textContent = n ? parts.join(', ') : 'Marque as áreas arrastando sobre a página'; $('go_red').disabled = !n; $('prevbtn_red').disabled = !n; }
 
@@ -1100,7 +1107,7 @@
     var b = el('div', 'bx ' + rec.m); placeBox(b, rec.r);
     var x = el('button', '', '×'); x.title = 'Remover'; x.onpointerdown = function (e) { e.stopPropagation(); };
     x.onclick = function (e) { e.stopPropagation(); var k = it.rects.indexOf(rec); if (k >= 0) it.rects.splice(k, 1); b.remove(); if (rec.ed) rec.ed.remove(); countRects(); };
-    b.appendChild(x); it.box.appendChild(b); rec.el = b; return b;
+    b.appendChild(x); if (rec.m === 'h') { var hn = el('span', 'nb hn'); hn.hidden = true; b.appendChild(hn); rec.hn = hn; } it.box.appendChild(b); rec.el = b; return b;
   }
   function subEditor(it, rec) {
     R.subN = (R.subN || 0) + 1; rec.n = R.subN; var nb = el('span', 'nb'); nb.textContent = rec.n; rec.el.appendChild(nb);
@@ -1120,7 +1127,7 @@
     w.onpointerdown = function (e) { if (e.button && e.button !== 0) return; e.preventDefault(); w.setPointerCapture(e.pointerId); st = pos(e); rec = { m: R.mode, r: [st[0], st[1], st[0], st[1]], text: '' }; cur = drawBox(it, rec); };
     w.onpointermove = function (e) { if (!st) return; var p = pos(e), r = rec.r; r[0] = Math.min(st[0], p[0]); r[1] = Math.min(st[1], p[1]); r[2] = Math.max(st[0], p[0]); r[3] = Math.max(st[1], p[1]); placeBox(cur, r); };
     w.onpointerup = w.onpointercancel = function () { if (!st) return; st = null; var r = rec.r;
-      if (r[2] - r[0] < 0.006 || r[3] - r[1] < 0.004) cur.remove(); else { it.rects.push(rec); if (rec.m === 's') subEditor(it, rec); } cur = null; countRects(); };
+      if (r[2] - r[0] < 0.006 || r[3] - r[1] < 0.004) cur.remove(); else { rec.seq = R.seq = (R.seq || 0) + 1; it.rects.push(rec); if (rec.m === 's') subEditor(it, rec); } cur = null; countRects(); };
     ed.appendChild(w);
   }
   async function addRed(files) {
@@ -1154,7 +1161,7 @@
       $('actions_red').hidden = false; countRects();
     } catch (e) { msg(res, H.errMsg(e), 'err'); }
   }
-  function clearRed() { R.subN = 0; $('subs_red').innerHTML = ''; R.items = []; R.bytes = null; R.pdf = null; ed.innerHTML = ''; ed.hidden = false; prevBox.innerHTML = ''; prevBox.hidden = true; $('actions_red').hidden = true; $('res_red').innerHTML = ''; }
+  function clearRed() { R.subN = 0; R.seq = 0; $('subs_red').innerHTML = ''; R.items = []; R.bytes = null; R.pdf = null; ed.innerHTML = ''; ed.hidden = false; prevBox.innerHTML = ''; prevBox.hidden = true; $('actions_red').hidden = true; $('res_red').innerHTML = ''; }
   function rr(x, r, rad) { x.beginPath(); if (x.roundRect) x.roundRect(r[0], r[1], r[2], r[3], rad); else x.rect(r[0], r[1], r[2], r[3]); }
   function bgColor(x, r) { // cor mais comum na borda da área = fundo
     var W = x.canvas.width, Hh = x.canvas.height, pts = [], k, cnt = {}, best = null;
@@ -1191,13 +1198,24 @@
         x.font = fontOf(L, size2); x.fillStyle = ink2; if (t) fitText(t, lx0, b2, r[0] + r[2] - lx0); });
     });
     x.fillStyle = '#000'; rects.filter(function (r) { return r.m === 't'; }).forEach(function (rec) { var r = px(rec); x.fillRect(Math.floor(r[0]), Math.floor(r[1]), Math.ceil(r[2]) + 1, Math.ceil(r[3]) + 1); });
-    var hs = rects.filter(function (r) { return r.m === 'h'; }).map(px); if (!hs.length) return;
+    var hr = rects.filter(function (r) { return r.m === 'h'; }), hs = hr.map(px); if (!hs.length) return;
     var cp = document.createElement('canvas'); cp.width = W; cp.height = Hh; cp.getContext('2d').drawImage(c, 0, 0);
     var b = Math.max(3, Math.round(W / 320)), rad = Math.max(4, W / 160);
     x.fillStyle = '#fff'; x.fillRect(0, 0, W, Hh);
     if ('filter' in x) { x.filter = 'blur(' + b + 'px) brightness(0.62)'; x.drawImage(cp, 0, 0); x.filter = 'none'; } else { x.drawImage(cp, 0, 0); x.fillStyle = 'rgba(0,0,0,0.45)'; x.fillRect(0, 0, W, Hh); }
     hs.forEach(function (r) { x.save(); rr(x, r, rad); x.clip(); x.drawImage(cp, 0, 0); x.restore(); });
     x.lineWidth = Math.max(2, W / 380); x.strokeStyle = '#ec602a'; hs.forEach(function (r) { rr(x, r, rad); x.stroke(); }); cp.width = cp.height = 0;
+    // número do passo: círculo laranja no canto de cima à esquerda de cada destaque
+    var br = Math.max(11, W / 70);
+    hr.forEach(function (rec, k) { if (!rec.num) return; var r = hs[k], gap = br * 0.35, cx, cy; // fora da área, à esquerda; sem espaço, em cima; senão no canto
+      if (r[0] - gap - 2 * br >= 2) { cx = r[0] - gap - br; cy = Math.max(br + 2, Math.min(Hh - br - 2, r[1] + Math.min(br, r[3] / 2))); }
+      else if (r[1] - gap - 2 * br >= 2) { cx = Math.min(W - br - 2, r[0] + br); cy = r[1] - gap - br; }
+      else { cx = Math.min(W - br - 2, Math.max(br + 2, r[0])); cy = Math.min(Hh - br - 2, Math.max(br + 2, r[1])); }
+      x.save(); x.shadowColor = 'rgba(0,0,0,.35)'; x.shadowBlur = br * 0.35; x.shadowOffsetY = br * 0.1;
+      x.beginPath(); x.arc(cx, cy, br, 0, Math.PI * 2); x.fillStyle = '#ec602a'; x.fill(); x.restore();
+      x.lineWidth = Math.max(1.5, br * 0.14); x.strokeStyle = '#fff'; x.beginPath(); x.arc(cx, cy, br, 0, Math.PI * 2); x.stroke();
+      var s = String(rec.num); x.fillStyle = '#fff'; x.textAlign = 'center'; x.textBaseline = 'middle';
+      x.font = '700 ' + Math.round(br * (s.length > 1 ? 1.05 : 1.25)) + 'px Arial, Helvetica, sans-serif'; x.fillText(s, cx, cy + br * 0.05); x.textAlign = 'left'; x.textBaseline = 'alphabetic'; });
   }
   async function processed(it, dpi) { // canvas da página/imagem já alterada
     var c, sc;

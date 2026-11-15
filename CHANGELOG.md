@@ -1,5 +1,10 @@
 # Registro de mudanças
 
+## 1.4.0 — 15/11/2026
+
+Novidades
+- **Destacar com números (passo a passo):** opção "Numerar os destaques" em Tarjar e destacar. Cada destaque ganha um círculo com 1, 2, 3… na ordem em que foi marcado, contando todas as páginas. Ao remover um destaque, os outros são renumerados.
+
 ## 1.3.0 — 14/11/2026
 
 Novidades
