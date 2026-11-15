@@ -589,7 +589,7 @@
   </details>
   <footer>
     Arquivo único: guarde este .html no computador ou pen drive e abra com dois cliques (Chrome, Edge ou Firefox).
-    <div class="credit">Desenvolvido por <span>Sandi :)</span><span class="sep">·</span><span id="appVersion">versão 1.6.0</span><span class="sep">·</span><button type="button" id="privLink">Política de privacidade</button></div>
+    <div class="credit">Desenvolvido por <span>Sandi :)</span><span class="sep">·</span><span id="appVersion">versão 1.6.1</span><span class="sep">·</span><button type="button" id="privLink">Política de privacidade</button></div>
   </footer>
   <dialog id="cmpDlg" aria-labelledby="cmpTitle">
     <div class="cmphd"><h2 id="cmpTitle">Comparar</h2><span class="lg" id="cmpInfo">PDF original à esquerda, Word convertido à direita. As duas colunas rolam juntas.</span><button type="button" class="btn ghost" id="cmpClose">Fechar</button></div>
@@ -15869,10 +15869,18 @@ if (typeof module !== 'undefined') module.exports = createPdf2Docx;
     $('go_scan').disabled = false; preview(); }); C.drops.scan = $('drop_scan');
   ['scan_deskew', 'scan_border', 'scan_contrast', 'scan_color'].forEach(function (id) { $(id).addEventListener('change', function () { if (SC.kind) preview(); }); });
   async function source(i, dpi) { // canvas da página i (0..), já em pixels
-    if (SC.kind === 'pdf') { var pg = await SC.pdf.getPage(i + 1), v = pg.getViewport({ scale: 1 }), c = await S.renderCanvas(pg, S.capScale(pg, dpi, 4200)); pg.cleanup(); return { c: c, W: v.width, H: v.height }; }
+    if (SC.kind === 'pdf') { var pg = await SC.pdf.getPage(i + 1), v = pg.getViewport({ scale: 1 }), src = await imageDpi(pg, v);
+      if (src) dpi = Math.min(dpi, Math.max(dpi === 200 ? 150 : 96, src * (dpi === 200 ? 1.5 : 1.05))); // não aumenta além da resolução da digitalização (o arquivo só cresceria)
+      var c = await S.renderCanvas(pg, S.capScale(pg, dpi, 4200)); pg.cleanup(); return { c: c, W: v.width, H: v.height }; }
     var bmp = await createImageBitmap(SC.files[i]), s = Math.min(1, 4200 / Math.max(bmp.width, bmp.height)), c2 = document.createElement('canvas'); c2.width = Math.round(bmp.width * s); c2.height = Math.round(bmp.height * s);
     var x = c2.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c2.width, c2.height); x.drawImage(bmp, 0, 0, c2.width, c2.height); bmp.close();
     var a4 = c2.width > c2.height ? [842, 595] : [595, 842], k = Math.min(a4[0] / c2.width, a4[1] / c2.height); return { c: c2, W: c2.width * k, H: c2.height * k }; }
+  async function imageDpi(pg, v) { // resolução da maior imagem da página (páginas escaneadas são uma foto só)
+    try { var ops = await pg.getOperatorList(), best = 0;
+      for (var k = 0; k < ops.fnArray.length; k++) if (ops.fnArray[k] === pdfjsLib.OPS.paintImageXObject) { var id = ops.argsArray[k][0], store = /^g_/.test(id) ? pg.commonObjs : pg.objs;
+        var im = await new Promise(function (ok) { try { store.get(id, ok); } catch (e) { ok(null); } setTimeout(function () { ok(null); }, 1500); });
+        if (im && im.width) best = Math.max(best, im.width / (Math.max(v.width, v.height) === v.width ? v.width : v.width) * 72); }
+      return best >= 50 ? best : 0; } catch (e) { return 0; } }
   function count() { return SC.kind === 'pdf' ? SC.pdf.numPages : SC.files.length; }
   function gray(c) { var x = c.getContext('2d', { willReadFrequently: true }), d = x.getImageData(0, 0, c.width, c.height), g = new Uint8ClampedArray(c.width * c.height), p = d.data;
     for (var i = 0, k = 0; k < g.length; i += 4, k++) g[k] = (p[i] * 77 + p[i + 1] * 150 + p[i + 2] * 29) >> 8; return { img: d, g: g, W: c.width, H: c.height }; }
@@ -15889,8 +15897,9 @@ if (typeof module !== 'undefined') module.exports = createPdf2Docx;
     return Math.abs(best) < 0.15 ? 0 : best; }
   function rotateCanvas(c, deg) { var r = deg * Math.PI / 180, o = document.createElement('canvas'); o.width = c.width; o.height = c.height; var x = o.getContext('2d');
     x.fillStyle = '#fff'; x.fillRect(0, 0, o.width, o.height); x.translate(o.width / 2, o.height / 2); x.rotate(-r); x.drawImage(c, -c.width / 2, -c.height / 2); return o; }
-  function levels(G) { var h = new Uint32Array(256), N = G.g.length; for (var i = 0; i < N; i++) h[G.g[i]]++; var lo = 0, hi = 255, a = 0;
+  function levels(G, soft) { var h = new Uint32Array(256), N = G.g.length; for (var i = 0; i < N; i++) h[G.g[i]]++; var lo = 0, hi = 255, a = 0;
     for (; lo < 255; lo++) { a += h[lo]; if (a > N * 0.01) break; } a = 0; for (; hi > 0; hi--) { a += h[hi]; if (a > N * 0.04) break; }
+    if (soft) lo = Math.min(lo, 12); // colorido: só clareia o fundo, sem escurecer ilustrações e fotos
     if (hi - lo < 40) return null; var lut = new Uint8ClampedArray(256); for (var v = 0; v < 256; v++) lut[v] = Math.max(0, Math.min(255, (v - lo) * 255 / (hi - lo))); return lut; }
   function edgeDark(c) { // pinta de branco as áreas escuras ligadas à borda da imagem (sombra e cantos pretos do scanner)
     var G = gray(c), W = G.W, Hh = G.H, f = 2, w = Math.ceil(W / f), h = Math.ceil(Hh / f), dark = new Uint8Array(w * h), seen = new Uint8Array(w * h), st = [];
@@ -15911,7 +15920,7 @@ if (typeof module !== 'undefined') module.exports = createPdf2Docx;
   function process(c, o) { // devolve { c, blank, angle }
     if (o.border) edgeDark(c);
     if (o.deskew) { var g0 = gray(c), ang = skewAngle(g0); if (ang) { c = rotateCanvas(c, ang); if (o.border) edgeDark(c); } }
-    var G = gray(c), x = c.getContext('2d'), d = G.img.data, N = G.g.length, lut = o.contrast ? levels(G) : null, out = null;
+    var G = gray(c), x = c.getContext('2d'), d = G.img.data, N = G.g.length, lut = o.contrast ? levels(G, o.color === 'color') : null, out = null;
     if (o.color === 'bw') { if (lut) for (var i = 0; i < N; i++) G.g[i] = lut[G.g[i]]; out = new Uint8ClampedArray(N); sauvola(G, out); }
     var W = G.W, ink = 0;
     for (var k = 0, p = 0; k < N; k++, p += 4) {

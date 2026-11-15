@@ -1,5 +1,11 @@
 # Registro de mudanças
 
+## 1.6.1 — 15/11/2026
+
+Melhorar digitalização
+- Não aumenta mais a resolução além da digitalização original (lê o tamanho da imagem de cada página); num livro escaneado a 110 dpi o arquivo dobrava de tamanho e agora fica menor que o original.
+- No modo colorido, o contraste só clareia o fundo, sem escurecer ilustrações e fotos.
+
 ## 1.6.0 — 15/11/2026
 
 Novas ferramentas
