@@ -1202,7 +1202,14 @@
     var cp = document.createElement('canvas'); cp.width = W; cp.height = Hh; cp.getContext('2d').drawImage(c, 0, 0);
     var b = Math.max(3, Math.round(W / 320)), rad = Math.max(4, W / 160);
     x.fillStyle = '#fff'; x.fillRect(0, 0, W, Hh);
-    if ('filter' in x) { x.filter = 'blur(' + b + 'px) brightness(0.62)'; x.drawImage(cp, 0, 0); x.filter = 'none'; } else { x.drawImage(cp, 0, 0); x.fillStyle = 'rgba(0,0,0,0.45)'; x.fillRect(0, 0, W, Hh); }
+    // fundo desfocado e escurecido sem depender do "filter" do canvas (não existe em alguns navegadores, como o Safari):
+    // reduz a imagem e amplia de volta (fica borrada) e depois cobre com preto translúcido
+    var f = Math.max(2, b * 1.6), sw = Math.max(1, Math.round(W / f)), sh = Math.max(1, Math.round(Hh / f)), sm = document.createElement('canvas'), sx = sm.getContext('2d');
+    sm.width = sw; sm.height = sh; sx.imageSmoothingEnabled = true; sx.imageSmoothingQuality = 'high'; sx.drawImage(cp, 0, 0, sw, sh);
+    var sm2 = document.createElement('canvas'); sm2.width = Math.max(1, Math.round(sw / 2)); sm2.height = Math.max(1, Math.round(sh / 2)); var sx2 = sm2.getContext('2d'); sx2.imageSmoothingQuality = 'high'; sx2.drawImage(sm, 0, 0, sm2.width, sm2.height);
+    sx.clearRect(0, 0, sw, sh); sx.drawImage(sm2, 0, 0, sw, sh);
+    x.imageSmoothingEnabled = true; x.imageSmoothingQuality = 'high'; x.drawImage(sm, 0, 0, W, Hh); sm.width = sm.height = sm2.width = sm2.height = 0;
+    x.fillStyle = 'rgba(0,0,0,0.38)'; x.fillRect(0, 0, W, Hh);
     hs.forEach(function (r) { x.save(); rr(x, r, rad); x.clip(); x.drawImage(cp, 0, 0); x.restore(); });
     x.lineWidth = Math.max(2, W / 380); x.strokeStyle = '#ec602a'; hs.forEach(function (r) { rr(x, r, rad); x.stroke(); }); cp.width = cp.height = 0;
     // número do passo: círculo laranja no canto de cima à esquerda de cada destaque

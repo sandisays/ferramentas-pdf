@@ -1,5 +1,10 @@
 # Registro de mudanças
 
+## 1.4.1 — 15/11/2026
+
+Correção
+- **Destacar:** em alguns navegadores (por exemplo, Safari e iPhone) o fundo não ficava desfocado nem escurecido; só apareciam as bordas. O desfoque agora é feito sem depender do filtro do navegador e funciona em todos.
+
 ## 1.4.0 — 15/11/2026
 
 Novidades
