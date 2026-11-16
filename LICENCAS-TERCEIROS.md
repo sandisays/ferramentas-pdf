@@ -14,7 +14,6 @@ O `index.html` embute as bibliotecas abaixo, nas versões fixadas em `package.js
 | Fonte Fredoka (`@fontsource/fredoka`) | 5.3.0 | OFL-1.1 | Fonte dos títulos |
 | jsQR | 1.4.0 | Apache-2.0 | Ler QR Codes |
 | qrcode-generator | 2.0.4 | MIT | Gerar QR Codes |
-| jsQR | 1.4.0 | Apache-2.0 | Ler QR Codes |
 | qpdf (via @neslinesli93/qpdf-wasm) | 0.3.1 | qpdf: Apache-2.0; empacotamento: ISC | Proteger e remover senha |
 | Lista de palavras derivada do wordfreq (`src/dict.b64`, gerada por `src/dicionario.py`) | 3.1.1 | dados CC BY-SA 4.0 (Robyn Speer e colaboradores) | Dicionário do Dado fictício |
 
