@@ -1,5 +1,16 @@
 # Registro de mudanças
 
+## 1.7.0 — 17/11/2026
+
+Comparar PDFs (refeito)
+- Lista de diferenças em cartões: tipo (alterado, removido, incluído), página, o texto antes e depois e um recorte ampliado do trecho nas duas versões, lado a lado.
+- Lê as palavras na ordem de leitura (linha por linha) e ignora trechos que só mudaram de lugar, como rodapés lidos em outra ordem; mudanças na mesma linha viram um item só.
+- Botão "Baixar relatório PDF" com todas as diferenças e os recortes, para arquivar ou enviar.
+- As páginas inteiras lado a lado ficam recolhidas ("Ver as páginas inteiras").
+
+Página
+- O quadro "Antes de usar, saiba que" fica recolhido e abre ao clicar; agora fica abaixo da ferramenta escolhida.
+
 ## 1.6.1 — 15/11/2026
 
 Melhorar digitalização
