@@ -1,5 +1,10 @@
 # Registro de mudanças
 
+## 1.7.1 — 17/11/2026
+
+Comparar PDFs
+- Lupa: clicar num recorte abre as duas versões ampliadas; clicar numa página inteira abre as duas páginas lado a lado em alta resolução. Zoom pelos botões, Ctrl + roda do mouse, pinça ou duplo clique; arrastar para mover; setas para ir à próxima diferença ou página; Esc fecha.
+
 ## 1.7.0 — 17/11/2026
 
 Comparar PDFs (refeito)
